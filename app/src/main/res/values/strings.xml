@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">ScrollingDetekceEpi</string>
+    <string name="start">Start detekce</string>
+    <string name="stop">Přerušit detekci</string>
+    <string name="mereni">Pouze měření</string>
+    <string name="mereni_detekce">Měření a detekce</string>
+    <string name="vysl_mereni">Výsledek měření</string>
+    <string name="poz_detekce">True</string>
+    <string name="neg_detekce">False</string>
+    <string name="vykresleni_grafu">Vykreslení grafu</string>
+    <string name="vykresli">Vykresli</string>
+    <string name="namerena_data">Naměřená data</string>
+    <string name="interpolovana_data">Interpolovaná data</string>
+    <string name="ft">Fourierova transformace</string>
+    <string name="ovladani">Ovládání detekce</string>
+</resources>
