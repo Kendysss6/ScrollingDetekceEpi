@@ -13,4 +13,9 @@
     <string name="interpolovana_data">Interpolovaná data</string>
     <string name="ft">Fourierova transformace</string>
     <string name="ovladani">Ovládání detekce</string>
+    <string name="vlast_mereni">Vlastnosti měření</string>
+    <string name="id_mereni">ID měření:</string>
+    <string name="empty">Empty</string>
+    <string name="typ_mereni">Typ měření:</string>
+    <string name="sdilet_mereni">Sdílet měření</string>
 </resources>
