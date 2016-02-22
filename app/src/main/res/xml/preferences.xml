@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <CheckBoxPreference
+        android:key="kalibrovano"
+        android:title="Kalibrace"
+        android:defaultValue="false"/>
+    <EditTextPreference
+        android:key="offSetX"
+        android:title="offSetX"
+        android:defaultValue="0"/>
+    <EditTextPreference
+        android:key="offSetY"
+        android:title="offSetY"
+        android:defaultValue="0"/>
+    <EditTextPreference
+        android:key="offSetZ"
+        android:title="offSetZ"
+        android:defaultValue="0"/>
+    <EditTextPreference
+        android:key="datum_kalibrace"
+        android:title="Datum kalibrace"
+        android:defaultValue="1970-01-01"/>
+
+</PreferenceScreen>

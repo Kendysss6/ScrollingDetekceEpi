@@ -18,4 +18,7 @@
     <string name="empty">Empty</string>
     <string name="typ_mereni">Typ měření:</string>
     <string name="sdilet_mereni">Sdílet měření</string>
+    <string name="kalibrovat">Kalibrovat</string>
+    <string name="kalibrace_zarizeni">Kalibrace zařízení</string>
+    <string name="napoveda_kalibrace">Položte telefon obrazovkou vzhuru jako by jste ho položili na postel. Potom stihkněte kalibrovat a nehýbejte s telefonem dokud se kalibrace nedokončí.</string>
 </resources>

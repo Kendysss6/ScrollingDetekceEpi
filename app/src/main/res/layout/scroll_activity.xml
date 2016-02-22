@@ -32,7 +32,8 @@
                     android:id="@+id/but_detekce"
                     android:layout_marginRight="@dimen/margin_right_button"
                     android:layout_marginEnd="@dimen/margin_right_button"
-                    android:layout_gravity="center_vertical"/>
+                    android:layout_gravity="center_vertical"
+                    android:onClick="onButStartDetekce"/>
 
 
                 <RadioGroup
@@ -54,6 +55,30 @@
                 </RadioGroup>
 
             </LinearLayout>
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/separator"
+            android:background="@color/separator"/>
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Kalibrace senzorů" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Kalibrace senzorů"
+                android:layout_gravity="center_horizontal"
+                android:onClick="kalibraceSenzotu"/>
 
         </LinearLayout>
 
@@ -216,6 +241,7 @@
         </LinearLayout>
 
         <TextView
+            android:id="@+id/pomText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
@@ -227,11 +253,11 @@
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="Large Text"/>
 
-        <TextView
+        <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Large Text"/>
+            android:text="Shit button"
+            android:onClick="shit"/>
 
         <TextView
             android:layout_width="wrap_content"
