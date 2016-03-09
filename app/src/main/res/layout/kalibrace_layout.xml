@@ -23,6 +23,6 @@
         android:text="@string/kalibrovat"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="50dp"
-        android:onClick="konec"/>
+        android:onClick="kalibrace"/>
 
 </LinearLayout>

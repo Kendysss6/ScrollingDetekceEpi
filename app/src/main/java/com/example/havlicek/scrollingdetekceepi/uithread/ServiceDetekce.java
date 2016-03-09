@@ -6,17 +6,25 @@ import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.Message;
-import android.os.Messenger;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.widget.Toast;
 
+import com.example.havlicek.scrollingdetekceepi.SensorValue;
 import com.example.havlicek.scrollingdetekceepi.asynchmereni.ThreadAsynchMereni;
+import com.example.havlicek.scrollingdetekceepi.asynchtasks.ZapisDoSouboru;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class ServiceDetekce extends Service {
     private Handler handlerUI;
     /**
-     * Handler ktery predava Messages a runables do Messagequeue daneho vlakna.
+     * Handler ktery predava Messages a runables do Messagequeue zaznamového vlakna.
      * Messagequeue se vytvoří když je k vlaknu přiřazen Looper, ktery defaultně není přiřazen k vlaknu.
      */
     private Handler handlerAsynchMereni;
@@ -24,16 +32,26 @@ public class ServiceDetekce extends Service {
      * HandlerThread, ktery vytvoři vlakno, kde se zpracuji sensor eventy
      */
     private ThreadAsynchMereni threadAsynchMereni;
+    /**
+     * Timer, ktery kazdou periodu zavola mereni pro vyhodnoceni namerenych dat
+     */
+    private Timer timer = null;
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
+    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    /**
+     * Id měření - řetězec, který jednoznačně určuje start detekce (stisknutí tlačítka Start detekce v
+     * GUI). Skládá se z z času.
+     */
+    private String idMereni = null;
 
-    public static final int MY_SAMPLING_PERIOD_MS = 10000000;
+    public static final int MY_SAMPLING_PERIOD_MICROSEC = 500000; // 2 vzorky za sekundu
     /**
      * Odhadovany počet prvku se kterymi budeme počítat fourierovu transformaci a klasifikaci
      */
-    public static final int ODHADOVANY_POCET_PRVKU = 500;
-    public final int MY_PERIOD = MY_SAMPLING_PERIOD_MS * ODHADOVANY_POCET_PRVKU; // perioda
-
+    public static final int ODHADOVANY_POCET_PRVKU = 10;
+    //public final int TIMER_PERIOD_MILISEC = MY_SAMPLING_PERIOD_MICROSEC * ODHADOVANY_POCET_PRVKU; // perioda
+    public static final int TIMER_PERIOD_MILISEC = 10000; // perioda v milisekundach, kazdych 10 sekund
 
     public ServiceDetekce() {
         super();
@@ -43,6 +61,7 @@ public class ServiceDetekce extends Service {
     @Override
     public void onCreate(){
         // sensor
+
         long t = System.currentTimeMillis();
 
         mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
@@ -55,26 +74,38 @@ public class ServiceDetekce extends Service {
         // its handler
         handlerAsynchMereni = threadAsynchMereni.getHandlerThread();
         Log.d("timeOnCreate", Long.toString(System.currentTimeMillis() - t));
+
         // register to service to obtain values to this handler
+        //mSensorManager.registerListener(threadAsynchMereni, mAccelerometer, MY_SAMPLING_PERIOD_MICROSEC, handlerAsynchMereni);
+        mSensorManager.registerListener(threadAsynchMereni, mAccelerometer, SensorManager.SENSOR_DELAY_GAME, handlerAsynchMereni);
+        timer = new Timer();
+        timer.scheduleAtFixedRate(timerTask, TIMER_PERIOD_MILISEC, TIMER_PERIOD_MILISEC);
+        Log.d("perioda",""+ TIMER_PERIOD_MILISEC);
+
         new Thread(new Runnable() { // je to moc pomale, aspon na tom starem telefonu, možna pak smazu
             @Override
             public void run() {
-                mSensorManager.registerListener(threadAsynchMereni, mAccelerometer, MY_SAMPLING_PERIOD_MS, handlerAsynchMereni);
+               // mSensorManager.registerListener(threadAsynchMereni, mAccelerometer, MY_SAMPLING_PERIOD_MICROSEC, handlerAsynchMereni);
+                //timer = new Timer();
+                //timer.scheduleAtFixedRate(timerTask, 0, TIMER_PERIOD_MILISEC);
             }
         }).start();
+
         Log.d("timeOnCreate", Long.toString(System.currentTimeMillis() - t));
     }
 
     @Override
     public  void onDestroy(){
+        timer.cancel();
         mSensorManager.unregisterListener(threadAsynchMereni);
         threadAsynchMereni.quit();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        //Toast.makeText(this, "service starting", Toast.LENGTH_SHORT).show();
         Log.d("Bound", "onstartcomand");
+        String idMereni = intent.getStringExtra("idMereni");
+        this.idMereni = idMereni;
         return super.onStartCommand(intent,flags,startId);
     }
 
@@ -84,29 +115,37 @@ public class ServiceDetekce extends Service {
     public IBinder onBind(Intent intent) {
         //Toast.makeText(getApplicationContext(), "binding", Toast.LENGTH_SHORT).show();
         Log.d("Bound","OnBound/onBind");
-        return mMessenger.getBinder();
+        // return mMessenger.getBinder();
+        return null;
     }
 
-    /**
-     * Target we publish for clients to send messages to IncomingHandler.
-     */
-    private final Messenger mMessenger = new Messenger(new IncomingHandler());
-
-    /**
-     * Handler of incoming messages from main activity.
-     */
-    class IncomingHandler extends Handler {
+    private TimerTask timerTask = new TimerTask() {
         @Override
-        public void handleMessage(Message msg) {
-            Log.d("what",Integer.toString(msg.what));
-            switch (msg.what) {
-                case 1:
-                    Toast.makeText(getApplicationContext(), "hello!", Toast.LENGTH_SHORT).show();
+        public void run() {
+            Log.d("timer","start");
+            handlerAsynchMereni.sendEmptyMessage(ThreadAsynchMereni.GET_VALUES);
+        }
+    };
+
+    public class HandlerUI extends Handler{
+        public static final int UPDATE_UI = 1;
+
+        public HandlerUI(){
+            super(Looper.getMainLooper());
+        }
+
+        @Override
+        public void handleMessage(Message msg){
+            switch (msg.what){
+                case UPDATE_UI:
+                    ArrayList l = (ArrayList) msg.obj;
+                    ZapisDoSouboru zapis = new ZapisDoSouboru(idMereni);
+                    zapis.execute(l);
+                    LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(new Intent("DetekceZachvatu"));
                     break;
                 default:
-                    super.handleMessage(msg);
+                    break;
             }
         }
     }
-
 }

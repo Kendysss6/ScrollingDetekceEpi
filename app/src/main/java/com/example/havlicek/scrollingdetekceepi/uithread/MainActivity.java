@@ -1,34 +1,35 @@
 package com.example.havlicek.scrollingdetekceepi.uithread;
 
 import android.app.Activity;
-import android.content.ComponentName;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.IBinder;
+import android.os.Handler;
 import android.os.Messenger;
 import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.example.havlicek.scrollingdetekceepi.R;
+import com.example.havlicek.scrollingdetekceepi.asynchtasks.ZapisDoSouboru;
 
+import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class MainActivity extends Activity {
-    /** Messenger for communicating with the service. */
-    Messenger mService = null;
-
-    /** Flag indicating whether we have called bind on the service. */
-    boolean mBound = false;
-
-    private long days = 0;
     private boolean detectionOff = true;
+    private String idMereni = null;
+    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,10 +40,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mBound){
-            unbindService(mConnection);
-            stopService(new Intent(this, ServiceDetekce.class));
-        }
+        stopService(new Intent(this, ServiceDetekce.class));
     }
 
     @Override
@@ -53,7 +51,7 @@ public class MainActivity extends Activity {
         String strDate = p.getString("datum_kalibrace", "1970-01-01");
         try {
             Date datumKalibrace = new SimpleDateFormat("yyyy-MM-dd").parse(strDate);
-            days = (new Date().getTime() - datumKalibrace.getTime()) / (24 * 60 * 60 * 1000);
+            long days = (new Date().getTime() - datumKalibrace.getTime()) / (24 * 60 * 60 * 1000);
             if (days > 10){
                 kalibrovano = false;
             }
@@ -61,6 +59,29 @@ public class MainActivity extends Activity {
             e.printStackTrace();
         }
         setGUIKalibrovano(kalibrovano);
+        if(kalibrovano){
+            TextView b = (TextView) findViewById(R.id.offsetX);
+            b.setText(Float.toString(p.getFloat("offsetX", 0f)));
+            b = (TextView) findViewById(R.id.offsetY);
+            b.setText(Float.toString(p.getFloat("offsetY", 0f)));
+            b = (TextView) findViewById(R.id.offsetZ);
+            b.setText(Float.toString(p.getFloat("offsetZ", 0f)));
+            b = (TextView) findViewById(R.id.sampling_period);
+            //b.setText(Float.toString(p.getFloat("meanTimeNanosec", 0f)));
+            b.setText(""+p.getFloat("meanTimeNanosec", 0f));
+        }
+
+
+        // register localBroadCastReciever to respond changes in UI from service
+        TextView textView = (TextView) findViewById(R.id.pomText);
+        Log.d("Path", getFilesDir().getAbsolutePath());
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("DetekceZachvatu"));
+    }
+
+    @Override
+    protected void onStop(){
+        super.onStop();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
     }
 
     private void setGUIKalibrovano(boolean kalibrovano){
@@ -75,12 +96,16 @@ public class MainActivity extends Activity {
             detectionOff = false;
             b.setText(R.string.stop);
             // Bind to the service
-            bindService(new Intent(this, ServiceDetekce.class), mConnection, Context.BIND_AUTO_CREATE);
+            Intent i = new Intent(this, ServiceDetekce.class);
+            this.idMereni = sdf.format(new Date());
+            TextView t = (TextView) findViewById(R.id.id_mereni);
+            t.setText(idMereni);
+            i.putExtra("idMereni", idMereni);
+            startService(i);
         } else {
             detectionOff = true;
             b.setText(R.string.start);
             // Unbind and stop service, must explicitly stop because http://developer.android.com/guide/components/bound-services.html#Lifecycle
-            unbindService(mConnection);
             stopService(new Intent(this, ServiceDetekce.class));
         }
     }
@@ -99,39 +124,25 @@ public class MainActivity extends Activity {
         editor.apply();
     }
 
-
-
-
-
-    /**
-     * Class for interacting with the main interface of the service.
-     */
-    private ServiceConnection mConnection = new ServiceConnection() {
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            // This is called when the connection with the service has been
-            // established, giving us the object we can use to
-            // interact with the service.  We are communicating with the
-            // service using a Messenger, so here we get a client-side
-            // representation of that from the raw IBinder object.
-            mService = new Messenger(service);
-            mBound = true;
-            Log.d("Boud","Bouded");
-
-            /**
-             * Notice that this example does not show how the service can respond to the client.
-             * If you want the service to respond, then you need to also create a Messenger in the client.
-             * Then when the client receives the onServiceConnected() callback,
-             * it sends a Message to the service that includes the client's Messenger in the replyTo parameter of the send() method.
-             * http://developer.android.com/guide/components/bound-services.html#Binding
-             * http://developer.android.com/reference/android/os/Message.html#replyTo
-             */
-        }
-
-        public void onServiceDisconnected(ComponentName className) {
-            // This is called when the connection with the service has been
-            // unexpectedly disconnected -- that is, its process crashed.
-            mService = null;
-            mBound = false;
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            Log.d("broadcast",action);
+            Button b = (Button) findViewById(R.id.shitButton);
+            b.setText(action);
         }
     };
+
+    public void shareFile(View v){
+        if (idMereni == null){
+            return;
+        }
+        File file = ZapisDoSouboru.getAlbumStorageDir(Build.PRODUCT + "_" + idMereni + ".txt");
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("file/*");
+        intent.putExtra(Intent.EXTRA_STREAM, Uri.parse(file.getPath()));
+        startActivity(Intent.createChooser(intent, "title"));
+    }
+
 }

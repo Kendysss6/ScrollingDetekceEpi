@@ -31,6 +31,15 @@ public class SensorValue {
         z = decimalFormat.format(values[2]);
     }
 
+    public SensorValue(long timeStamp, float[] values) {
+        this.timeStamp = timeStamp;
+        fX = values[0];
+        fY = values[1];
+        fZ = values[2];
+        x = null;
+        y = null;
+        z = null;
+    }
     public long getTimeStamp() {
         return timeStamp;
     }
