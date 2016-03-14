@@ -12,13 +12,11 @@ import org.json.JSONArray;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
  * Created by Ondřej on 19. 2. 2016.
+ * Třída vytvořený pro zápis do složky downloads.
  */
 public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> {
     private String idMereni;
@@ -30,16 +28,15 @@ public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> 
     @Override
     protected synchronized Void doInBackground(List ... params) {
         save(params);
-        Log.d("zapis","done");
+        Log.d("zapiss","done" + idMereni);
         return null;
     }
 
     public static File getAlbumStorageDir(String fileName) {
         // Get the directory for the user's public pictures directory.
-        File file = new File(
+        return new File(
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
                 fileName);
-        return file;
     }
 
     private void save(List ... params){
@@ -59,8 +56,8 @@ public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> 
                 }
 
                 writer.write("data = ");
-                String jsonZapis = list.toString(4).replaceAll("],", "];");
-                Log.d("json", jsonZapis);
+                //String jsonZapis = list.toString(4).replaceAll("],", "];");
+                //Log.d("json", jsonZapis);
                 //Log.d("jsonFloat",listFloats.toString(4).replaceAll("],", "];"));
                 writer.write(list.toString().replaceAll("],", "];"));
                 writer.write(";\n");
@@ -70,8 +67,6 @@ public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> 
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
     }
 
 }

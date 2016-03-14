@@ -4,10 +4,10 @@ import java.text.DecimalFormat;
 
 /**
  * Created by Ondra on 1. 5. 2015.
+ * SensorValue, reprezentuje hodnotu naměřenou ze senzoru.
  */
 public class SensorValue {
     private long timeStamp;
-    private float[] values;
     private float fX;
     private float fY;
     private float fZ;
@@ -15,27 +15,22 @@ public class SensorValue {
     private String y;
     private String z;
 
-    /**
-     * Kontruktor
-     *
-     * @param timeStamp kdy byl zaznam porizen
-     * @param values    hodnoty X,Y,Z akcelerometru
-     */
-    public SensorValue(long timeStamp, float[] values, DecimalFormat decimalFormat) {
+
+    public SensorValue(long timeStamp, float fX, float fY, float fZ, DecimalFormat decimalFormat) {
         this.timeStamp = timeStamp;
-        fX = values[0];
-        fY = values[1];
-        fZ = values[2];
-        x = decimalFormat.format(values[0]);
-        y = decimalFormat.format(values[1]);
-        z = decimalFormat.format(values[2]);
+        this.fX = fX;
+        this.fY = fY;
+        this.fZ = fZ;
+        x = decimalFormat.format(fX);
+        y = decimalFormat.format(fY);
+        z = decimalFormat.format(fZ);
     }
 
-    public SensorValue(long timeStamp, float[] values) {
+    public SensorValue(long timeStamp, float fX, float fY, float fZ) {
         this.timeStamp = timeStamp;
-        fX = values[0];
-        fY = values[1];
-        fZ = values[2];
+        this.fX = fX;
+        this.fY = fY;
+        this.fZ = fZ;
         x = null;
         y = null;
         z = null;

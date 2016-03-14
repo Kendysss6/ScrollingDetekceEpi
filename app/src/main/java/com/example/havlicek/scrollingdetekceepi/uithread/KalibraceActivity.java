@@ -1,15 +1,17 @@
 package com.example.havlicek.scrollingdetekceepi.uithread;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 
 import com.example.havlicek.scrollingdetekceepi.R;
 import com.example.havlicek.scrollingdetekceepi.SensorValue;
@@ -19,15 +21,9 @@ import com.example.havlicek.scrollingdetekceepi.asynchtasks.ZapisDoSouboru;
 
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.Timer;
-import java.util.TimerTask;
 
 
 /**
@@ -37,46 +33,49 @@ import java.util.TimerTask;
  * Offsets použiju ve třídě {@link ThreadAsynchMereni}, které upravi hodnoty a sampling frequenci použiju v {@link LinInterpolace}, které
  * odečtou posunutí nuly senzorů daného telefonu.
  */
-public class KalibraceActivity extends AppCompatActivity implements SensorEventListener {
-
-    private SensorManager mSensorManager;
-    private Sensor mAccelerometer;
-
-    private List<SensorValue> values;
+public class KalibraceActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.kalibrace_layout);
-        mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
-        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        //mSensorManager.registerListener(this, mAccelerometer,SensorManager.SENSOR_DELAY_FASTEST);
-        this.values = new LinkedList<SensorValue>();
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("Kalibrace"));
     }
 
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+        stopService(new Intent(KalibraceActivity.this, ServiceDetekce.class));
+    }
 
+    @Override
+    protected void onStart(){
+        super.onStart();
+        TextView t = (TextView) findViewById(R.id.dobaKalibraceNapoveda);
+        t.setText(String.format("%s %d %s","Kalibrace trvá přibližně ", 2 * ServiceDetekce.TIMER_PERIOD_MILISEC / 1000," sekund."));
+    }
+
+    /**
+     * Spusti kalibraci senzorů. Intent je poslan do metody {@link ServiceDetekce#onStartCommand(Intent, int, int)}.
+     * @param v View
+     */
     public void kalibrace(View v){
-        mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-        double milisecToSec = 1e03;
-        long dobaKalibraceMilisec = (long) (10 * milisecToSec);
-        new Timer("Kalibrace").schedule(new TimerTask() {
-            @Override
-            public void run() {
-                mSensorManager.unregisterListener(KalibraceActivity.this);
-                spoctiKalibraci();
-            }
-        }, dobaKalibraceMilisec);
-
-
-
-
+        findViewById(R.id.progressBarLayout).setVisibility(View.VISIBLE);
+        Intent i = new Intent(this, ServiceDetekce.class);
+        i.putExtra("Kalibrovani", true);
+        i.putExtra("idMereni","KalibraceJmeno");
+        startService(i);
     }
 
-    private void spoctiKalibraci(){
-        // ListIterator<SensorValue> iterator = values.listIterator();
-        ZapisDoSouboru zapis = new ZapisDoSouboru("kalibrace");
+    /**
+     * Spočte skutečnou periodu vzorkovani a ostatní kalibrační konstanty, dle naměřených dat.
+     */
+    private void spoctiKalibraciAndZapis(List<SensorValue> values){
+        // zapis namerenych hodnot pri kalibraci
+        ZapisDoSouboru zapis = new ZapisDoSouboru("Kalibrace");
         zapis.execute(values);
-        float offsetX = 0;
+        // vypocet konstant
         Mean mX = new Mean();
         Mean mY = new Mean();
         Mean mZ = new Mean();
@@ -105,22 +104,38 @@ public class KalibraceActivity extends AppCompatActivity implements SensorEventL
         editor.putFloat("offsetY", (float) mY.getResult());
         editor.putFloat("offsetZ", (float) mZ.getResult());
         editor.putFloat("meanTimeNanosec", (float) meanTsSec2);
-
-        editor.commit();
-        finish();
+        editor.commit(); // ano chci aby to bylo okamžitě, protože to hned budu načítat
+        Log.d("kalibrace","hodnoty ulozeny do preferences");
     }
 
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        float [] val = event.values;
-        float x = val[0];
-        float y = val[1];
-        float z = val[2];
-        values.add(new SensorValue(event.timestamp, val));
-    }
+    private boolean probihaliVypoctyPriMereni = false;
 
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-    }
+    /**
+     * BroadcastReciver pro přijmutí zprávy, že bylo měření dokončeno. Zde probíhají výpočty, tj průměrování
+     * naměřených hodnot.
+     */
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d("kalibrace","reciver kalibrace aktivity");
+            if(!probihaliVypoctyPriMereni){ // prvni mereni probíhalo bez vypoctu pro měření
+                probihaliVypoctyPriMereni = true;
+                return;
+            }
+            String action = intent.getAction();
+            Log.d("broadcast", action);
+            List<SensorValue> list = (List) intent.getSerializableExtra("Hodnoty");
+            // vypnutí služby
+            findViewById(R.id.progressBarLayout).setVisibility(View.GONE);
+            stopService(new Intent(KalibraceActivity.this, ServiceDetekce.class));
+            // případné výpočty
+            if(list == null){
+                Log.d("mesageReciver","Je to null");
+                return;
+            }
+            spoctiKalibraciAndZapis(list);
+            // ukonci aktivitu
+            finish();
+        }
+    };
 }

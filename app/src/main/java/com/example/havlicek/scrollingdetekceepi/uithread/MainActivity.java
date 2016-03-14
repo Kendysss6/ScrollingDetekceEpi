@@ -29,7 +29,7 @@ import java.util.Date;
 public class MainActivity extends Activity {
     private boolean detectionOff = true;
     private String idMereni = null;
-    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,8 +67,8 @@ public class MainActivity extends Activity {
             b = (TextView) findViewById(R.id.offsetZ);
             b.setText(Float.toString(p.getFloat("offsetZ", 0f)));
             b = (TextView) findViewById(R.id.sampling_period);
-            //b.setText(Float.toString(p.getFloat("meanTimeNanosec", 0f)));
-            b.setText(""+p.getFloat("meanTimeNanosec", 0f));
+            b.setText(Float.toString(p.getFloat("meanTimeNanosec", 0f)));
+            //b.setText(""+p.getFloat("meanTimeNanosec", 0f));
         }
 
 
@@ -101,15 +101,20 @@ public class MainActivity extends Activity {
             TextView t = (TextView) findViewById(R.id.id_mereni);
             t.setText(idMereni);
             i.putExtra("idMereni", idMereni);
+            i.putExtra("kalibrace", false);
             startService(i);
         } else {
             detectionOff = true;
             b.setText(R.string.start);
-            // Unbind and stop service, must explicitly stop because http://developer.android.com/guide/components/bound-services.html#Lifecycle
+            // stop service, must explicitly stop because http://developer.android.com/guide/components/bound-services.html#Lifecycle
             stopService(new Intent(this, ServiceDetekce.class));
         }
     }
 
+    /**
+     * Spusti aktivitu, která se stará o kalibraci a zjištění konstant senzorů.
+     * @param v Button ktery to spustil
+     */
     public void kalibraceSenzotu(View v){
         Intent i = new Intent(this,KalibraceActivity.class);
         startActivity(i);

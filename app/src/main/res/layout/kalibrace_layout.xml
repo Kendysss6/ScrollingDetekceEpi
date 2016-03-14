@@ -17,6 +17,12 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="10dp" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Text"
+        android:id="@+id/dobaKalibraceNapoveda" />
+
     <Button
         android:layout_width="match_parent"
         android:layout_height="80dp"
@@ -24,5 +30,26 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="50dp"
         android:onClick="kalibrace"/>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressBarLayout"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Probíhá kalibrace senzorů"
+            android:id="@+id/textView"
+            android:layout_gravity="center_vertical" />
+
+        <ProgressBar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true" />
+
+    </LinearLayout>
 
 </LinearLayout>

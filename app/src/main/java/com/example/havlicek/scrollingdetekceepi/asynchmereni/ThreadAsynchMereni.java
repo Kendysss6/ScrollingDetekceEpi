@@ -55,7 +55,7 @@ public class ThreadAsynchMereni extends HandlerThread implements SensorEventList
             float x = val[0];
             float y = val[1];
             float z = val[2];
-            values.add(new SensorValue(event.timestamp, val, decimalFormat));
+            values.add(new SensorValue(event.timestamp, x, y, z, decimalFormat));
         //}
         //Log.d("velikost",Integer.toString(values.size()));
     }
