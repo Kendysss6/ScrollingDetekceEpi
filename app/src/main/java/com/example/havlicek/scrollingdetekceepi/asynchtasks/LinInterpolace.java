@@ -7,6 +7,7 @@ import com.example.havlicek.scrollingdetekceepi.SensorValue;
 import com.example.havlicek.scrollingdetekceepi.uithread.ServiceDetekce;
 
 import org.apache.commons.math3.complex.Complex;
+import org.apache.commons.math3.distribution.LogisticDistribution;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
@@ -35,6 +36,7 @@ public class LinInterpolace extends AsyncTask<ArrayList<SensorValue>, Integer, A
      */
     @Override
     protected ArrayList<SensorValue> doInBackground(ArrayList<SensorValue>... params) {
+        Thread.currentThread().setName("Linearni interpolace");
         ArrayList<SensorValue> sensorValues = params[0];
         ListIterator<SensorValue> iterator = sensorValues.listIterator();
 
@@ -45,16 +47,12 @@ public class LinInterpolace extends AsyncTask<ArrayList<SensorValue>, Integer, A
          */
         long periodaVzorkovani = dobaMereni / (pocetNamerenychHodnot - 1); // zaokrouhlime, je to v nanosekundach
         Log.d("Interpolace","perioda vzorkovani "+periodaVzorkovani);
+        Log.d("Interpolace","pocet hodnot "+pocetNamerenychHodnot);
         double [] interpolatedX = new double[pocetHodnotFFT];
         double [] interpolatedY = new double[pocetHodnotFFT];
         double [] interpolatedZ = new double[pocetHodnotFFT];
 
         ArrayList<SensorValue> fftValues = new ArrayList<SensorValue>(pocetHodnotFFT);
-
-        if (pocetNamerenychHodnot > pocetHodnotFFT){
-            Log.d("Interpolace","fail, moc hodnot, potom osetrim kdyz mam hodnot vic nez 512");
-            return null;
-        }
 
         long time = 0;
         int i = 0;
@@ -63,6 +61,7 @@ public class LinInterpolace extends AsyncTask<ArrayList<SensorValue>, Integer, A
         SensorValue value1;
         SensorValue value2 = iterator.next(); //  prvni hodnota
         long initialTime = value2.getTimeStamp();
+
         do {
             value1 = value2;
             value2 = iterator.next();
@@ -80,7 +79,9 @@ public class LinInterpolace extends AsyncTask<ArrayList<SensorValue>, Integer, A
                 fftValues.add(new SensorValue(time, (float) interpolatedX[i], (float)interpolatedY[i], (float)interpolatedZ[i]));
                 time += periodaVzorkovani;
                 i++;
+                if(i >= pocetHodnotFFT){break;}
             }
+            if(i >= pocetHodnotFFT){break;}
         } while (iterator.hasNext());
 
         while (i < pocetHodnotFFT){
