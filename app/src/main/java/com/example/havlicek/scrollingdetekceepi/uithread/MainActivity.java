@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.os.Messenger;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -34,18 +35,21 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("MainActivity", "onCreate()");
         setContentView(R.layout.scroll_activity);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.d("MainActivity", "onDestroy()");
         stopService(new Intent(this, ServiceDetekce.class));
     }
 
     @Override
     protected  void onStart(){
         super.onStart();
+        Log.d("MainActivity","onStart");
         SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(this); // (context == aktivita)
         boolean kalibrovano = p.getBoolean("kalibrovano", false);
         String strDate = p.getString("datum_kalibrace", "1970-01-01");
@@ -76,6 +80,7 @@ public class MainActivity extends Activity {
         TextView textView = (TextView) findViewById(R.id.pomText);
         Log.d("Path", getFilesDir().getAbsolutePath());
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("DetekceZachvatu"));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("Destroying Service"));
     }
 
     @Override
@@ -103,6 +108,7 @@ public class MainActivity extends Activity {
             i.putExtra("idMereni", idMereni);
             i.putExtra("kalibrace", false);
             startService(i);
+
         } else {
             detectionOff = true;
             b.setText(R.string.start);
@@ -133,7 +139,15 @@ public class MainActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            Log.d("broadcast",action);
+            Log.d("MainActivity","Broadcastreciever" + action);
+            if(action.equals("DetekceZachvatu")){
+
+            } else if(action.equals("Destroying Service")){
+                Button b = (Button) findViewById(R.id.but_detekce);
+                detectionOff = true;
+                b.setText(R.string.start);
+            }
+            // Log.d("broadcast", action);
             Button b = (Button) findViewById(R.id.shitButton);
             b.setText(action);
         }
@@ -149,5 +163,4 @@ public class MainActivity extends Activity {
         intent.putExtra(Intent.EXTRA_STREAM, Uri.parse(file.getPath()));
         startActivity(Intent.createChooser(intent, "title"));
     }
-
 }

@@ -1,28 +1,30 @@
 package com.example.havlicek.scrollingdetekceepi.uithread;
 
+import android.app.Notification;
 import android.app.Service;
 import android.content.Intent;
+import android.graphics.drawable.Icon;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 
-import com.example.havlicek.scrollingdetekceepi.SensorValue;
+import com.example.havlicek.scrollingdetekceepi.R;
 import com.example.havlicek.scrollingdetekceepi.asynchmereni.ThreadAsynchMereni;
 import com.example.havlicek.scrollingdetekceepi.asynchtasks.LinInterpolace;
 import com.example.havlicek.scrollingdetekceepi.asynchtasks.ZapisDoSouboru;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -44,6 +46,7 @@ public class ServiceDetekce extends Service {
     private Timer timer = null;
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
+    private WakeLock wakeLock;
     private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     private boolean kalibrace = false;
     /**
@@ -64,6 +67,7 @@ public class ServiceDetekce extends Service {
     //public final int TIMER_PERIOD_MILISEC = MY_SAMPLING_PERIOD_MICROSEC * ODHADOVANY_POCET_PRVKU; // perioda
     public static final int TIMER_PERIOD_MILISEC = 10000; // perioda v milisekundach, kazdych 10 sekund
 
+    public static final int notificationID = 156;
     public ServiceDetekce() {
         super();
     }
@@ -73,6 +77,7 @@ public class ServiceDetekce extends Service {
      */
     @Override
     public void onCreate(){
+        Log.d("ServiceDetekce","onCreate()");
         mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         // Handler for user interface
@@ -84,17 +89,24 @@ public class ServiceDetekce extends Service {
 
         // register to service to obtain values to this handler
         //mSensorManager.registerListener(threadAsynchMereni, mAccelerometer, MY_SAMPLING_PERIOD_MICROSEC, handlerAsynchMereni);
-        mSensorManager.registerListener(threadAsynchMereni, mAccelerometer, SensorManager.SENSOR_DELAY_GAME, handlerAsynchMereni);
+        mSensorManager.registerListener(threadAsynchMereni, mAccelerometer, SensorManager.SENSOR_DELAY_FASTEST, handlerAsynchMereni);
         timer = new Timer();
         timer.scheduleAtFixedRate(timerTask, TIMER_PERIOD_MILISEC, TIMER_PERIOD_MILISEC);
-        Log.d("perioda",""+ TIMER_PERIOD_MILISEC);
+        //Log.d("perioda",""+ TIMER_PERIOD_MILISEC);
+
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "MyWakelockTag");
+        wakeLock.acquire();
     }
 
     @Override
-    public  void onDestroy(){
+    public void onDestroy() {
+        Log.d("ServiceDetekce", "onDestroy()");
+        LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(new Intent("Destroying Service"));
         timer.cancel();
         mSensorManager.unregisterListener(threadAsynchMereni);
         threadAsynchMereni.quit();
+        wakeLock.release();
     }
 
     /**
@@ -106,7 +118,7 @@ public class ServiceDetekce extends Service {
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("Service", "onstartcomand"+intent);
+        Log.d("ServiceDetekce", "onstartcomand"+intent);
         if (intent != null){ // null pokud se to restartuje
             kalibrace = intent.getBooleanExtra("Kalibrovani", false);
             Log.d("kalibraceOnstart",""+kalibrace);
@@ -114,6 +126,14 @@ public class ServiceDetekce extends Service {
         } else {
             Log.d("Service","restart");
         }
+        Notification notification = new Notification.Builder(this)
+                .setContentTitle("Měření hodnot")
+                .setContentText("Kontent text")
+                .setSmallIcon(R.drawable.ic_notification)
+                //.setLargeIcon(Icon.createWithResource(this, R.drawable.ic_notification2))
+                .build();
+
+        startForeground(notificationID, notification);
         return super.onStartCommand(intent,flags,startId);
     }
 

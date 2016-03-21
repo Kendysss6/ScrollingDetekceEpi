@@ -12,6 +12,7 @@ import org.json.JSONArray;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,8 +28,8 @@ public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> 
 
     @Override
     protected synchronized Void doInBackground(List ... params) {
+        Thread.currentThread().setName("Zapis do souboru");
         save(params);
-        Log.d("zapiss","done" + idMereni);
         return null;
     }
 
@@ -67,6 +68,11 @@ public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> 
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    protected void onPostExecute(Void values){
+        Log.d("Zapis","Done");
     }
 
 }
