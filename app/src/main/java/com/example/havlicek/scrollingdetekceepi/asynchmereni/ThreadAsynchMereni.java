@@ -40,7 +40,7 @@ public class ThreadAsynchMereni extends HandlerThread implements SensorEventList
 
 
     public ThreadAsynchMereni(String name, Handler uiHandler) {
-        super(name, Process.THREAD_PRIORITY_BACKGROUND);
+        super(name, Process.THREAD_PRIORITY_URGENT_AUDIO);
         start();
         this.uiHandler = uiHandler;
         this.mWorkerHandler = new HandlerAsynchMereni(getLooper());

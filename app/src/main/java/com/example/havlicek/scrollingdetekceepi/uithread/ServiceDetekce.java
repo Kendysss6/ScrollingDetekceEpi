@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.drawable.Icon;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -23,6 +24,7 @@ import com.example.havlicek.scrollingdetekceepi.asynchmereni.ThreadAsynchMereni;
 import com.example.havlicek.scrollingdetekceepi.asynchtasks.LinInterpolace;
 import com.example.havlicek.scrollingdetekceepi.asynchtasks.ZapisDoSouboru;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Timer;
@@ -59,7 +61,7 @@ public class ServiceDetekce extends Service {
     /**
      * Odhadovany počet prvku se kterymi budeme počítat fourierovu transformaci a klasifikaci
      */
-    public static final int ODHADOVANY_POCET_PRVKU = 10;
+    public static final int ODHADOVANY_POCET_PRVKU = 512;
 
     /**
      * Perioda, za kterou časovač {@link ServiceDetekce#timer} spouští úkol {@link ServiceDetekce#timerTask}.
@@ -95,18 +97,37 @@ public class ServiceDetekce extends Service {
         //Log.d("perioda",""+ TIMER_PERIOD_MILISEC);
 
         PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-        wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "MyWakelockTag");
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyWakelockTag");
         wakeLock.acquire();
+        Log.d("wakelock", "aquired");
     }
 
     @Override
     public void onDestroy() {
         Log.d("ServiceDetekce", "onDestroy()");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String filePath = Environment.getExternalStorageDirectory() + "/logcat.txt";
+                    filePath = new File(
+                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                            "logcat.txt").toString();
+
+                    Log.d("logcat", filePath);
+                    Runtime.getRuntime().exec(new String[]{"logcat", "-f", filePath, "*:V"});
+                } catch (Exception e){
+                    Log.d("logcat","fail to save logcat");
+                }
+
+            }
+        }).start();
         LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(new Intent("Destroying Service"));
         timer.cancel();
         mSensorManager.unregisterListener(threadAsynchMereni);
         threadAsynchMereni.quit();
         wakeLock.release();
+        Log.d("wakelock", "released");
     }
 
     /**
