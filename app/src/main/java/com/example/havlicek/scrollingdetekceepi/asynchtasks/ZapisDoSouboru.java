@@ -72,7 +72,7 @@ public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> 
 
     @Override
     protected void onPostExecute(Void values){
-        Log.d("Zapis","Done");
+        Log.d("Zapis","Done "+idMereni);
     }
 
 }

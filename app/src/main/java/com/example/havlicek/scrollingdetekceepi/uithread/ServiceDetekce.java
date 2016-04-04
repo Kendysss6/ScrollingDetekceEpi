@@ -49,7 +49,6 @@ public class ServiceDetekce extends Service {
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
     private WakeLock wakeLock;
-    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     private boolean kalibrace = false;
     /**
      * Id měření - řetězec, který jednoznačně určuje start detekce (stisknutí tlačítka Start detekce v
@@ -112,10 +111,10 @@ public class ServiceDetekce extends Service {
                     String filePath = Environment.getExternalStorageDirectory() + "/logcat.txt";
                     filePath = new File(
                             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                            "logcat.txt").toString();
+                            "logcat"+idMereni+".txt").toString();
 
                     Log.d("logcat", filePath);
-                    Runtime.getRuntime().exec(new String[]{"logcat", "-f", filePath, "*:V"});
+                    Runtime.getRuntime().exec(new String[]{"logcat", "-f", filePath, "-v", "threadtime", "*:V"});
                 } catch (Exception e){
                     Log.d("logcat","fail to save logcat");
                 }

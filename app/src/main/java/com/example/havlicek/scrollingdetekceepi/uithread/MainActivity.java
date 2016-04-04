@@ -30,7 +30,7 @@ import java.util.Date;
 public class MainActivity extends Activity {
     private boolean detectionOff = true;
     private String idMereni = null;
-    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd");
+    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
