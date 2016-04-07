@@ -92,7 +92,7 @@ public class ThreadAsynchMereni extends HandlerThread implements SensorEventList
             switch (msg.what){
                 case GET_VALUES:
                     Message m = Message.obtain();
-                    m.what = ServiceDetekce.HandlerUI.UPDATE_UI;
+                    m.what = ServiceDetekce.HandlerUI.MEASURING_FINISHED;
                     m.obj = ThreadAsynchMereni.this.values;
                     values = new ArrayList<SensorValue>(ServiceDetekce.ODHADOVANY_POCET_PRVKU + pocetPrvkuNavic);
                     uiHandler.sendMessage(m);

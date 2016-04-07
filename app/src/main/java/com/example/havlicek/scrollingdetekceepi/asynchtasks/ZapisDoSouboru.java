@@ -3,9 +3,11 @@ package com.example.havlicek.scrollingdetekceepi.asynchtasks;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Message;
 import android.util.Log;
 
 import com.example.havlicek.scrollingdetekceepi.SensorValue;
+import com.example.havlicek.scrollingdetekceepi.uithread.ServiceDetekce;
 
 import org.json.JSONArray;
 
@@ -18,12 +20,17 @@ import java.util.List;
 /**
  * Created by Ondřej on 19. 2. 2016.
  * Třída vytvořený pro zápis do složky downloads.
+ * <p>Spouští se pouze z {@link ServiceDetekce.HandlerUI#handleMessage(Message)}</p>
  */
 public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> {
     private String idMereni;
+    private String typMereni;
+    private String sourceDir;
 
-    public ZapisDoSouboru(String idMereni){
+    public ZapisDoSouboru(String idMereni, String typMereni, String sourceDir){
         this.idMereni = idMereni;
+        this.typMereni = typMereni;
+        this.sourceDir = sourceDir;
     }
 
     @Override
@@ -33,15 +40,15 @@ public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> 
         return null;
     }
 
-    public static File getAlbumStorageDir(String fileName) {
+    public static File getAlbumStorageDir(String dirInDownloads, String fileName) {
         // Get the directory for the user's public pictures directory.
         return new File(
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                fileName);
+                dirInDownloads + fileName);
     }
 
     private void save(List ... params){
-        File file = getAlbumStorageDir(Build.PRODUCT + "_" + idMereni + ".txt");
+        File file = getAlbumStorageDir(sourceDir, idMereni +"_"+ Build.PRODUCT + "_" +typMereni+ ".txt");
         try {
             FileOutputStream stream = new FileOutputStream(file, true);
             OutputStreamWriter writer = new OutputStreamWriter(stream, "UTF-8");
@@ -72,7 +79,7 @@ public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> 
 
     @Override
     protected void onPostExecute(Void values){
-        Log.d("Zapis","Done "+idMereni);
+        Log.d("Zapis","Done "+idMereni+typMereni);
     }
 
 }

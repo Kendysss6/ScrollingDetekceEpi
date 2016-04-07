@@ -65,6 +65,7 @@ public class KalibraceActivity extends AppCompatActivity {
         Intent i = new Intent(this, ServiceDetekce.class);
         i.putExtra("Kalibrovani", true);
         i.putExtra("idMereni","KalibraceJmeno");
+        i.putExtra("sourceDir","");
         startService(i);
     }
 
@@ -73,7 +74,7 @@ public class KalibraceActivity extends AppCompatActivity {
      */
     private void spoctiKalibraciAndZapis(List<SensorValue> values){
         // zapis namerenych hodnot pri kalibraci
-        ZapisDoSouboru zapis = new ZapisDoSouboru("Kalibrace");
+        ZapisDoSouboru zapis = new ZapisDoSouboru("Kalibrace","","");
         zapis.execute(values);
         // vypocet konstant
         Mean mX = new Mean();

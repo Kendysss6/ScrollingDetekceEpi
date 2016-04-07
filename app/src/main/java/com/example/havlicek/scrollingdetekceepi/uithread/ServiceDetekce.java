@@ -1,8 +1,11 @@
 package com.example.havlicek.scrollingdetekceepi.uithread;
 
 import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.graphics.drawable.Icon;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
@@ -13,6 +16,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
@@ -39,7 +43,7 @@ public class ServiceDetekce extends Service {
      */
     private Handler handlerAsynchMereni;
     /**
-     *  Je to <b>VLÁKNO</b>! NENÍ TO HANDLER! HandlerThread, ktery vytvoři vlakno, kde se zpracuji sensor eventy.
+     *  Je to <b>VLÁKNO</b>! NENÍ TO HANDLER! Je to třída HandlerThread, ktera vytvoři vlakno, kde se zpracuji sensor eventy.
      */
     private ThreadAsynchMereni threadAsynchMereni;
     /**
@@ -55,6 +59,8 @@ public class ServiceDetekce extends Service {
      * GUI). Skládá se z z času.
      */
     private String idMereni = null;
+
+    private String sourceDir = null;
 
     public static final int MY_SAMPLING_PERIOD_MICROSEC = 500000; // 2 vzorky za sekundu
     /**
@@ -81,10 +87,13 @@ public class ServiceDetekce extends Service {
         Log.d("ServiceDetekce","onCreate()");
         mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        // Load offsets
+        SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(this);
         // Handler for user interface
         handlerUI = new HandlerUI();
         // create new thread for asynch sampling with its handler
-        threadAsynchMereni = new ThreadAsynchMereni("Asynchronní měření", handlerUI);
+        threadAsynchMereni = new ThreadAsynchMereni("Asynchronní měření", handlerUI,
+                p.getFloat("offsetX", 0f), p.getFloat("offsetY", 0f), p.getFloat("offsetZ", 0f));
         // its handler
         handlerAsynchMereni = threadAsynchMereni.getHandlerThread();
 
@@ -109,10 +118,7 @@ public class ServiceDetekce extends Service {
             public void run() {
                 try {
                     String filePath = Environment.getExternalStorageDirectory() + "/logcat.txt";
-                    filePath = new File(
-                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                            "logcat"+idMereni+".txt").toString();
-
+                    filePath = ZapisDoSouboru.getAlbumStorageDir(sourceDir,"logcat"+idMereni+".txt").toString();
                     Log.d("logcat", filePath);
                     Runtime.getRuntime().exec(new String[]{"logcat", "-f", filePath, "-v", "threadtime", "*:V"});
                 } catch (Exception e){
@@ -138,18 +144,32 @@ public class ServiceDetekce extends Service {
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("ServiceDetekce", "onstartcomand"+intent);
+        Log.d("ServiceDetekce", "onstartcomand" + intent);
         if (intent != null){ // null pokud se to restartuje
             kalibrace = intent.getBooleanExtra("Kalibrovani", false);
             Log.d("kalibraceOnstart",""+kalibrace);
-            this.idMereni = intent.getStringExtra("idMereni");;
+            this.idMereni = intent.getStringExtra("idMereni");
+            this.sourceDir = intent.getStringExtra("sourceDir");
+            // vytvořeni složky kam se bude ukladat data
+            File f = ZapisDoSouboru.getAlbumStorageDir(sourceDir,"");
+            f.mkdirs();
         } else {
             Log.d("Service","restart");
         }
+        Log.d("Service","slozky vytvoreny");
+
+        PendingIntent resultPendingIntent =
+                PendingIntent.getActivity(
+                        this,
+                        0,
+                        new Intent(this, MainActivity.class),
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
         Notification notification = new Notification.Builder(this)
                 .setContentTitle("Měření hodnot")
                 .setContentText("Kontent text")
                 .setSmallIcon(R.drawable.ic_notification)
+               // .setContentIntent(resultPendingIntent)
                 //.setLargeIcon(Icon.createWithResource(this, R.drawable.ic_notification2))
                 .build();
 
@@ -169,10 +189,16 @@ public class ServiceDetekce extends Service {
     };
 
     /**
-     * Handler, který dostává naměřené hodnoty a dále nastavuje a vytváří nové Thready pro zápis a výpočet.
+     * Handler, který dostává naměřené hodnoty a stará se o další vypočty a dále nastavuje a vytváří nové Thready pro zápis a výpočet.
+     * POUZE ZDE SE SPOUSTI ZAPIS HODNOT DO SOUBORU.
      */
     public class HandlerUI extends Handler{
+        public static final int MEASURING_FINISHED = 0;
         public static final int UPDATE_UI = 1;
+        public static final int LIN_INTER_FINISHED = 2;
+        public static final int NORM_FINISHED = 3;
+        public static final int FFT_FINISHED = 4;
+        public static final int KLASIFICATION_FINISHED = 5;
 
         public HandlerUI(){
             super(Looper.getMainLooper());
@@ -181,6 +207,8 @@ public class ServiceDetekce extends Service {
         /**
          * Broadcasting changes to GUI to {@link MainActivity#mMessageReceiver} or if kalibrace, then to
          * {@link KalibraceActivity#mMessageReceiver}.
+         * Bude sloužit pro upozorneni že se něco stalo.
+         *
          * @param msg message to handle
          */
         @Override
@@ -190,20 +218,42 @@ public class ServiceDetekce extends Service {
             Log.d("Service","incoming Message "+kalibrace);
             switch (msg.what){
                 case UPDATE_UI:
+                    // zde budu vysilat zmeny na UI, případně upozorneni že se něco děje
+                    break;
+                case MEASURING_FINISHED:
                     l = (ArrayList) msg.obj;
-                    zapis = new ZapisDoSouboru(idMereni);
-                    zapis.execute(l);
-                    if (kalibrace){ // jediny rozdil pokud dělam kalibraci nebo měřim hodnoty
+                    zapis = new ZapisDoSouboru(idMereni,"raw",sourceDir);
+                    zapis.execute(l); // zapis nezpracovaných hodnot z akcelerometru do souboru
+                    if (kalibrace){ // jediny rozdil, pokud dělam kalibraci, je ,že pouze měřim hodnoty a pošlu je pres Intent zpet
                         Intent i = new Intent("Kalibrace");
                         i.putExtra("Hodnoty", l);
                         LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
                     } else {
                         LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(new Intent("DetekceZachvatu"));
-                        LinInterpolace interpolace = new LinInterpolace(idMereni);
+                        LinInterpolace interpolace = new LinInterpolace(this);
                         interpolace.execute(l);
                     }
                     break;
+                case LIN_INTER_FINISHED:
+                    l = (ArrayList) msg.obj;
+                    zapis = new ZapisDoSouboru(idMereni,"lin",sourceDir);
+                    zapis.execute(l);
+                    Message msgPom = this.obtainMessage(NORM_FINISHED, 1,1);
+                    this.sendMessage(msgPom);
+                    break;
+                case NORM_FINISHED:
+                    // tady ziskam z message true/false jestli signal ma dostatecnou energii a zda mam pokracovat dal
+                    if (msg.arg1 == 1){
+                        // spocteni Fouerierovy transformace
+                    }
+                    break;
+                case FFT_FINISHED:
+                    // klasifikace
+                    break;
+                case KLASIFICATION_FINISHED:
+                    break;
                 default:
+                    Log.e("message","wrong what message");
                     break;
             }
         }

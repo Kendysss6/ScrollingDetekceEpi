@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -30,6 +31,7 @@ import java.util.Date;
 public class MainActivity extends Activity {
     private boolean detectionOff = true;
     private String idMereni = null;
+    private String sourceDir = null;
     private SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
 
     @Override
@@ -103,10 +105,12 @@ public class MainActivity extends Activity {
             // Bind to the service
             Intent i = new Intent(this, ServiceDetekce.class);
             this.idMereni = sdf.format(new Date());
+            this.sourceDir = getResources().getString(R.string.app_name)+"/"+idMereni+"/";
             TextView t = (TextView) findViewById(R.id.id_mereni);
             t.setText(idMereni);
             i.putExtra("idMereni", idMereni);
             i.putExtra("kalibrace", false);
+            i.putExtra("sourceDir",sourceDir);
             startService(i);
 
         } else {
@@ -157,7 +161,7 @@ public class MainActivity extends Activity {
         if (idMereni == null){
             return;
         }
-        File file = ZapisDoSouboru.getAlbumStorageDir(Build.PRODUCT + "_" + idMereni + ".txt");
+        File file = ZapisDoSouboru.getAlbumStorageDir("",Build.PRODUCT + "_" + idMereni + ".txt");
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("file/*");
         intent.putExtra(Intent.EXTRA_STREAM, Uri.parse(file.getPath()));
