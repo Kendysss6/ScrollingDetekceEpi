@@ -35,16 +35,26 @@ public class ThreadAsynchMereni extends HandlerThread implements SensorEventList
     private List<SensorValue> values;
 
     private final int pocetPrvkuNavic = 50;
+    private float offsetX;
+    private float offsetY;
+    private float offsetZ;
 
     private DecimalFormat decimalFormat = new DecimalFormat("0.0000000000", new DecimalFormatSymbols(Locale.ENGLISH));
 
 
-    public ThreadAsynchMereni(String name, Handler uiHandler) {
+    public ThreadAsynchMereni(String name, Handler uiHandler, float offsetX, float offsetY, float offsetZ) {
         super(name, Process.THREAD_PRIORITY_URGENT_AUDIO);
         start();
         this.uiHandler = uiHandler;
         this.mWorkerHandler = new HandlerAsynchMereni(getLooper());
         this.values = new ArrayList<SensorValue>(ServiceDetekce.ODHADOVANY_POCET_PRVKU + pocetPrvkuNavic);
+        if(offsetX == 0 || offsetY == 0 || offsetZ == 0){
+            Log.e("mereni","spatny offsety");
+            throw new IllegalArgumentException("spatny offsety");
+        }
+        this.offsetX = offsetX;
+        this.offsetY = offsetY;
+        this.offsetZ = offsetZ;
     }
 
     @Override
@@ -52,9 +62,9 @@ public class ThreadAsynchMereni extends HandlerThread implements SensorEventList
         //Log.d("JmenoVlakna", Thread.currentThread().getName());
        // if (values.size() <= ServiceDetekce.ODHADOVANY_POCET_PRVKU ){
             float [] val = event.values;
-            float x = val[0];
-            float y = val[1];
-            float z = val[2];
+            float x = val[0] - offsetX;
+            float y = val[1] - offsetY;
+            float z = val[2] - offsetZ;
             values.add(new SensorValue(event.timestamp, x, y, z, decimalFormat));
         //}
         //Log.d("velikost",Integer.toString(values.size()));
