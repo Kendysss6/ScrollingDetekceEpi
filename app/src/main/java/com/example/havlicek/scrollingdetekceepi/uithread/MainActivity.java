@@ -161,7 +161,7 @@ public class MainActivity extends Activity {
         if (idMereni == null){
             return;
         }
-        File file = ZapisDoSouboru.getAlbumStorageDir("",Build.PRODUCT + "_" + idMereni + ".txt");
+        File file = ZapisDoSouboru.getAlbumStorageDir(sourceDir, idMereni + "_" + Build.PRODUCT + "_" + "raw" + ".txt");
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("file/*");
         intent.putExtra(Intent.EXTRA_STREAM, Uri.parse(file.getPath()));
