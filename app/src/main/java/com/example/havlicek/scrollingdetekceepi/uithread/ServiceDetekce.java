@@ -20,11 +20,13 @@ import android.util.Log;
 import android.view.View;
 
 import com.example.havlicek.scrollingdetekceepi.R;
+import com.example.havlicek.scrollingdetekceepi.SensorValue;
 import com.example.havlicek.scrollingdetekceepi.asynchmereni.ThreadAsynchMereni;
 import com.example.havlicek.scrollingdetekceepi.asynchtasks.LinInterpolace;
 import com.example.havlicek.scrollingdetekceepi.asynchtasks.ZapisDoSouboru;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -89,7 +91,7 @@ public class ServiceDetekce extends Service {
         // Load offsets
         SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(this);
         // Handler for user interface
-        handlerUI = new HandlerUI();
+        handlerUI = new HandlerUI(new WeakReference<ServiceDetekce>(this));
         // create new thread for asynch sampling with its handler
         threadAsynchMereni = new ThreadAsynchMereni("Asynchronní měření", handlerUI,
                 p.getFloat("offsetX", 0f), p.getFloat("offsetY", 0f), p.getFloat("offsetZ", 0f));
@@ -230,6 +232,8 @@ public class ServiceDetekce extends Service {
      * POUZE ZDE SE SPOUSTI ZAPIS HODNOT DO SOUBORU.
      */
     public class HandlerUI extends Handler{
+        WeakReference<ServiceDetekce> ref;
+
         public static final int MEASURING_FINISHED = 0;
         public static final int UPDATE_UI = 1;
         public static final int LIN_INTER_FINISHED = 2;
@@ -239,8 +243,10 @@ public class ServiceDetekce extends Service {
 
         private int cisloMereni = 0;
 
-        public HandlerUI(){
+        public HandlerUI(WeakReference<ServiceDetekce> r){
             super(Looper.getMainLooper());
+            ref = r;
+
         }
 
         /**
@@ -254,29 +260,30 @@ public class ServiceDetekce extends Service {
         public void handleMessage(Message msg){
             ArrayList l;
             ZapisDoSouboru zapis;
-            Log.d("Service","incoming Message "+kalibrace);
+            Log.d("Service","incoming Message "+ref.get().kalibrace);
             switch (msg.what){
                 case UPDATE_UI:
                     // zde budu vysilat zmeny na UI, případně upozorneni že se něco děje
                     break;
                 case MEASURING_FINISHED:
                     l = (ArrayList) msg.obj;
-                    zapis = new ZapisDoSouboru(idMereni,"raw",sourceDir);
+                    zapis = new ZapisDoSouboru(ref.get().idMereni,"raw",ref.get().sourceDir);
                     zapis.setIndex(++cisloMereni);
                     zapis.execute(l); // zapis nezpracovaných hodnot z akcelerometru do souboru
-                    if (kalibrace){ // jediny rozdil, pokud dělam kalibraci, je ,že pouze měřim hodnoty a pošlu je pres Intent zpet
+                    if (ref.get().kalibrace){ // jediny rozdil, pokud dělam kalibraci, je ,že pouze měřim hodnoty a pošlu je pres Intent zpet
                         Intent i = new Intent("Kalibrace");
                         i.putExtra("Hodnoty", l);
-                        LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
+                        i.putParcelableArrayListExtra("Array list", l);
+                        LocalBroadcastManager.getInstance(ref.get()).sendBroadcast(i);
                     } else {
-                        LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(new Intent("DetekceZachvatu"));
+                        LocalBroadcastManager.getInstance(ref.get()).sendBroadcast(new Intent("DetekceZachvatu"));
                         LinInterpolace interpolace = new LinInterpolace(this);
                         interpolace.execute(l);
                     }
                     break;
                 case LIN_INTER_FINISHED:
                     l = (ArrayList) msg.obj;
-                    zapis = new ZapisDoSouboru(idMereni,"lin",sourceDir);
+                    zapis = new ZapisDoSouboru(ref.get().idMereni,"lin",ref.get().sourceDir);
                     zapis.execute(l);
                     Message msgPom = this.obtainMessage(MODUS_FINISHED, 1,1);
                     this.sendMessage(msgPom);
