@@ -231,7 +231,7 @@ public class ServiceDetekce extends Service {
      * Handler, který dostává naměřené hodnoty a stará se o další vypočty a dále nastavuje a vytváří nové Thready pro zápis a výpočet.
      * POUZE ZDE SE SPOUSTI ZAPIS HODNOT DO SOUBORU.
      */
-    public class HandlerUI extends Handler{
+    public static class HandlerUI extends Handler{
         WeakReference<ServiceDetekce> ref;
 
         public static final int MEASURING_FINISHED = 0;
@@ -276,7 +276,9 @@ public class ServiceDetekce extends Service {
                         i.putParcelableArrayListExtra("Array list", l);
                         LocalBroadcastManager.getInstance(ref.get()).sendBroadcast(i);
                     } else {
-                        LocalBroadcastManager.getInstance(ref.get()).sendBroadcast(new Intent("DetekceZachvatu"));
+                        Intent i = new Intent("DetekceZachvatu");
+                        i.putParcelableArrayListExtra("ArraylistMeasuring", l);
+                        LocalBroadcastManager.getInstance(ref.get()).sendBroadcast(i);
                         LinInterpolace interpolace = new LinInterpolace(this);
                         interpolace.execute(l);
                     }
