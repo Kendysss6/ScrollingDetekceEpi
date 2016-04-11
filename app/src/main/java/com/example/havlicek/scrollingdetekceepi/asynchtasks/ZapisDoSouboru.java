@@ -26,11 +26,16 @@ public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> 
     private String idMereni;
     private String typMereni;
     private String sourceDir;
+    private int index = -1;
 
     public ZapisDoSouboru(String idMereni, String typMereni, String sourceDir){
         this.idMereni = idMereni;
         this.typMereni = typMereni;
         this.sourceDir = sourceDir;
+    }
+
+    public void setIndex(int i){
+        this.index = i;
     }
 
     @Override
@@ -44,11 +49,11 @@ public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> 
         // Get the directory for the user's public pictures directory.
         return new File(
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                dirInDownloads + fileName);
+                dirInDownloads + fileName); // m tam je proto, proto mfile musi zacinat pismenem
     }
 
     private void save(List ... params){
-        File file = getAlbumStorageDir(sourceDir, idMereni +"_"+ Build.PRODUCT + "_" +typMereni+ ".txt");
+        File file = getAlbumStorageDir(sourceDir, "m"+ idMereni +"_"+ Build.PRODUCT + "_" +typMereni+ ".txt");
         try {
             FileOutputStream stream = new FileOutputStream(file, true);
             OutputStreamWriter writer = new OutputStreamWriter(stream, "UTF-8");
@@ -63,6 +68,11 @@ public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> 
                     list.put(record);
                 }
 
+               /* if(index != -1){
+                    writer.write("data"+index+" = ");
+                } else {
+                    writer.write("data = ");
+                }*/
                 writer.write("data = ");
                 //String jsonZapis = list.toString(4).replaceAll("],", "];");
                 //Log.d("json", jsonZapis);

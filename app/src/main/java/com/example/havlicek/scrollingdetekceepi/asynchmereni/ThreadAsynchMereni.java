@@ -27,6 +27,7 @@ import java.util.Locale;
  */
 public class ThreadAsynchMereni extends HandlerThread implements SensorEventListener {
     public static final int  GET_VALUES = 1;
+    public static final int  KALIBRACE_SETTINGS = 2;
 
 
     private Handler uiHandler;
@@ -48,10 +49,7 @@ public class ThreadAsynchMereni extends HandlerThread implements SensorEventList
         this.uiHandler = uiHandler;
         this.mWorkerHandler = new HandlerAsynchMereni(getLooper());
         this.values = new ArrayList<SensorValue>(ServiceDetekce.ODHADOVANY_POCET_PRVKU + pocetPrvkuNavic);
-        if(offsetX == 0 || offsetY == 0 || offsetZ == 0){
-            Log.e("mereni","spatny offsety");
-            throw new IllegalArgumentException("spatny offsety");
-        }
+
         this.offsetX = offsetX;
         this.offsetY = offsetY;
         this.offsetZ = offsetZ;
@@ -82,6 +80,8 @@ public class ThreadAsynchMereni extends HandlerThread implements SensorEventList
 
 
     public class HandlerAsynchMereni extends Handler{
+        public static final int  NEKALIBRUJEME = 10;
+        public static final int  KALIBRUJEME = 11;
 
         public HandlerAsynchMereni(Looper looper){
             super(looper);
@@ -96,6 +96,22 @@ public class ThreadAsynchMereni extends HandlerThread implements SensorEventList
                     m.obj = ThreadAsynchMereni.this.values;
                     values = new ArrayList<SensorValue>(ServiceDetekce.ODHADOVANY_POCET_PRVKU + pocetPrvkuNavic);
                     uiHandler.sendMessage(m);
+                    break;
+                case KALIBRACE_SETTINGS:
+                    switch (msg.arg1){
+                        case KALIBRUJEME:
+                            offsetX = 0;
+                            offsetY = 0;
+                            offsetZ = 0;
+                            values = new ArrayList<SensorValue>(ServiceDetekce.ODHADOVANY_POCET_PRVKU + pocetPrvkuNavic);
+                            break;
+                        case NEKALIBRUJEME:
+                            values = new ArrayList<SensorValue>(ServiceDetekce.ODHADOVANY_POCET_PRVKU + pocetPrvkuNavic);
+                            break;
+                        default:
+                            break;
+                    }
+                    Log.d("Mereni","Offsets "+offsetX+" "+offsetY+" "+offsetZ);
                     break;
                 default:
                     break;

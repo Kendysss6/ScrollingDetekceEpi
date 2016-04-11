@@ -43,15 +43,17 @@
                     <RadioButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/mereni"
-                        android:id="@+id/mereni_radio"
-                        android:checked="true" />
+                        android:text="@string/mereni_detekce"
+                        android:id="@+id/mereniDetekce_radio"
+                        android:checked="true"
+                        android:enabled="false"/>
 
                     <RadioButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/mereni_detekce"
-                        android:id="@+id/mereniDetekce_radio" />
+                        android:text="@string/mereni"
+                        android:id="@+id/mereni_radio"
+                        android:enabled="false"/>
                 </RadioGroup>
 
             </LinearLayout>
@@ -224,9 +226,6 @@
 
 
 
-
-
-
         <View
             android:layout_width="match_parent"
             android:layout_height="@dimen/separator"
@@ -280,7 +279,7 @@
                     android:id="@+id/vykresli_but"
                     android:layout_marginRight="30dp"
                     android:layout_marginEnd="30dp"
-                    android:layout_gravity="center_vertical"/>
+                    android:layout_gravity="center_vertical" />
 
                 <RadioGroup
                     android:layout_width="match_parent"
@@ -291,19 +290,22 @@
                         android:layout_height="wrap_content"
                         android:text="@string/namerena_data"
                         android:id="@+id/namerenaDat_radio"
-                        android:checked="true" />
+                        android:checked="true"
+                        android:enabled="false" />
 
                     <RadioButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/interpolovana_data"
-                        android:id="@+id/inter_radio" />
+                        android:id="@+id/inter_radio"
+                        android:enabled="false"/>
 
                     <RadioButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/ft"
-                        android:id="@+id/fft_radio" />
+                        android:id="@+id/fft_radio"
+                        android:enabled="false"/>
                 </RadioGroup>
             </LinearLayout>
 
@@ -331,82 +333,9 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Shit button"
+            android:text="Button"
             android:id="@+id/shitButton"
-            android:onClick="shit"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Large Text"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Large Text"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Large Text"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Large Text"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Large Text"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Large Text"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Large Text"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Large Text"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Large Text"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Large Text"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Large Text"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Large Text"/>
-
-
+            android:onClick="shit"
+            android:enabled="false"/>
     </LinearLayout>
 </ScrollView>

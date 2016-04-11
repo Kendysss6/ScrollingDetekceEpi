@@ -23,6 +23,13 @@
         android:text="New Text"
         android:id="@+id/dobaKalibraceNapoveda" />
 
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:ems="10"
+        android:id="@+id/pass" />
+
     <Button
         android:layout_width="match_parent"
         android:layout_height="80dp"

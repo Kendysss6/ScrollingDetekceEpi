@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ScrollingDetekceEpi</string>
+    <string name="app_name">Detektor</string>
     <string name="start">Start detekce</string>
     <string name="stop">Přerušit detekci</string>
     <string name="mereni">Pouze měření</string>

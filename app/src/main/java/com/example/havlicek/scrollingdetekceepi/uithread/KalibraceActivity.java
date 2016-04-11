@@ -11,13 +11,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.example.havlicek.scrollingdetekceepi.R;
 import com.example.havlicek.scrollingdetekceepi.SensorValue;
 import com.example.havlicek.scrollingdetekceepi.asynchmereni.ThreadAsynchMereni;
 import com.example.havlicek.scrollingdetekceepi.asynchtasks.LinInterpolace;
-import com.example.havlicek.scrollingdetekceepi.asynchtasks.ZapisDoSouboru;
 
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 
@@ -34,6 +35,14 @@ import java.util.List;
  * odečtou posunutí nuly senzorů daného telefonu.
  */
 public class KalibraceActivity extends AppCompatActivity {
+
+    private double estMeanX = 0;
+    private double estMeanY = 0;
+    private double estMeanZ = 0;
+
+    private double odchylkaX = 0;
+    private double odchylkaY = 0;
+    private double odchylkaZ = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +62,7 @@ public class KalibraceActivity extends AppCompatActivity {
     protected void onStart(){
         super.onStart();
         TextView t = (TextView) findViewById(R.id.dobaKalibraceNapoveda);
-        t.setText(String.format("%s %d %s","Kalibrace trvá přibližně ", 2 * ServiceDetekce.TIMER_PERIOD_MILISEC / 1000," sekund."));
+        t.setText(String.format("%s %d %s", "Kalibrace trvá přibližně ", 2 * ServiceDetekce.TIMER_PERIOD_MILISEC_KALIBRACE / 1000, " sekund."));
     }
 
     /**
@@ -61,40 +70,45 @@ public class KalibraceActivity extends AppCompatActivity {
      * @param v View
      */
     public void kalibrace(View v){
+        EditText t = (EditText) findViewById(R.id.pass);
+        String pass = t.getText().toString();
+        if (!pass.equals("113366")){
+            return;
+        }
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         findViewById(R.id.progressBarLayout).setVisibility(View.VISIBLE);
         Intent i = new Intent(this, ServiceDetekce.class);
         i.putExtra("Kalibrovani", true);
         i.putExtra("idMereni","KalibraceJmeno");
-        i.putExtra("sourceDir","");
+        i.putExtra("sourceDir", getResources().getString(R.string.app_name)+"/");
+        probihaliVypoctyPriMereni = false;
         startService(i);
     }
 
     /**
      * Spočte skutečnou periodu vzorkovani a ostatní kalibrační konstanty, dle naměřených dat.
      */
-    private void spoctiKalibraciAndZapis(List<SensorValue> values){
-        // zapis namerenych hodnot pri kalibraci
-        ZapisDoSouboru zapis = new ZapisDoSouboru("Kalibrace","","");
-        zapis.execute(values);
-        // vypocet konstant
+    private void spoctiKalibraci(List<SensorValue> values){
         Mean mX = new Mean();
         Mean mY = new Mean();
         Mean mZ = new Mean();
-        Mean time = new Mean();
+        Mean mTime = new Mean();
         long lastTimeValue = values.get(0).getTimeStamp();
         boolean i = true;
-        double perioda_sum = 0;
         for (SensorValue value: values){
+            // deterministicky vyradim hodnoty vzdalene od střední hodnoty vice než 3*odchylka
+            if(Math.abs(estMeanX - value.getfX()) > 3*odchylkaX || Math.abs(estMeanY - value.getfY()) > 3*odchylkaY
+                    || Math.abs(estMeanZ - value.getfZ()) > 3*odchylkaZ){
+                Log.d("Kalibrace","skipped value");
+                continue;
+            }
             mX.increment(value.getfX());
             mY.increment(value.getfY());
             mZ.increment(value.getfZ());
             if (i){i=false;continue;} // vynecham prvni hodnotu
-            time.increment(value.getTimeStamp() - lastTimeValue);
-            perioda_sum += value.getTimeStamp() - lastTimeValue;
+            mTime.increment(value.getTimeStamp() - lastTimeValue);
             lastTimeValue = value.getTimeStamp();
         }
-        double meanTsSec = time.getResult() * 1e-9;
-        double meanTsSec2 = perioda_sum / (values.size() - 1);
 
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
         editor.putBoolean("kalibrovano", true);
@@ -104,10 +118,12 @@ public class KalibraceActivity extends AppCompatActivity {
         editor.putFloat("offsetX", (float) mX.getResult());
         editor.putFloat("offsetY", (float) mY.getResult());
         editor.putFloat("offsetZ", (float) mZ.getResult());
-        editor.putFloat("meanTimeNanosec", (float) meanTsSec2);
+        editor.putFloat("meanTimeNanosec", (float) mTime.getResult()); // vzorkovani
         editor.commit(); // ano chci aby to bylo okamžitě, protože to hned budu načítat
         Log.d("kalibrace","hodnoty ulozeny do preferences");
     }
+
+
 
     private boolean probihaliVypoctyPriMereni = false;
 
@@ -121,6 +137,7 @@ public class KalibraceActivity extends AppCompatActivity {
             Log.d("kalibrace","reciver kalibrace aktivity");
             if(!probihaliVypoctyPriMereni){ // prvni mereni probíhalo bez vypoctu pro měření
                 probihaliVypoctyPriMereni = true;
+                spoctiEstMeanAndVar((List) intent.getSerializableExtra("Hodnoty"));
                 return;
             }
             String action = intent.getAction();
@@ -134,9 +151,41 @@ public class KalibraceActivity extends AppCompatActivity {
                 Log.d("mesageReciver","Je to null");
                 return;
             }
-            spoctiKalibraciAndZapis(list);
+            spoctiKalibraci(list);
             // ukonci aktivitu
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             finish();
         }
     };
+
+    private void spoctiEstMeanAndVar(List<SensorValue> values){
+        double sumX = 0, sumY = 0, sumZ = 0;
+        // stredni hodnota
+        for (SensorValue value: values){
+            sumX += value.getfX();
+            sumY += value.getfY();
+            sumZ += value.getfZ();
+        }
+        this.estMeanX = sumX / values.size();
+        this.estMeanY = sumY / values.size();
+        this.estMeanZ = sumZ / values.size();
+
+        // variance
+        sumX = 0; sumY = 0; sumZ = 0;
+        for (SensorValue value: values){
+            // rucne spoctu prumer
+            sumX += (value.getfX() - estMeanX)*(value.getfX() - estMeanX);
+            sumY += (value.getfY() - estMeanY)*(value.getfY() - estMeanY);
+            sumZ += (value.getfZ() - estMeanZ)*(value.getfZ() - estMeanZ);
+        }
+        this.odchylkaX = Math.sqrt(sumX / (values.size() - 1));
+        this.odchylkaY = Math.sqrt(sumY / (values.size() - 1));
+        this.odchylkaZ = Math.sqrt(sumZ / (values.size() - 1));
+
+        Log.d("Kalibrace", "X: " + estMeanX + " " + odchylkaX);
+        Log.d("Kalibrace", "Y: " + estMeanY + " " + odchylkaY);
+        Log.d("Kalibrace", "Z: " + estMeanZ + " " + odchylkaZ);
+    }
+
+
 }

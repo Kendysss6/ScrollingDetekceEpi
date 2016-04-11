@@ -1,6 +1,7 @@
 package com.example.havlicek.scrollingdetekceepi.uithread;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -83,6 +84,15 @@ public class MainActivity extends Activity {
         Log.d("Path", getFilesDir().getAbsolutePath());
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("DetekceZachvatu"));
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("Destroying Service"));
+
+        Button b = (Button) findViewById(R.id.but_detekce);
+        if (isMyServiceRunning(ServiceDetekce.class)){
+            detectionOff = false;
+            b.setText(R.string.stop);
+        } else {
+            detectionOff = true;
+            b.setText(R.string.start);
+        }
     }
 
     @Override
@@ -93,8 +103,8 @@ public class MainActivity extends Activity {
 
     private void setGUIKalibrovano(boolean kalibrovano){
         findViewById(R.id.but_detekce).setEnabled(kalibrovano);
-        findViewById(R.id.sdilet_but).setEnabled(kalibrovano);
-        findViewById(R.id.vykresli_but).setEnabled(kalibrovano);
+        findViewById(R.id.sdilet_but).setEnabled(false);
+        findViewById(R.id.vykresli_but).setEnabled(false);
     }
 
     public void onButStartDetekce(View v){
@@ -127,6 +137,7 @@ public class MainActivity extends Activity {
      */
     public void kalibraceSenzotu(View v){
         Intent i = new Intent(this,KalibraceActivity.class);
+        i.putExtra("sourceDir", sourceDir);
         startActivity(i);
     }
 
@@ -161,10 +172,20 @@ public class MainActivity extends Activity {
         if (idMereni == null){
             return;
         }
-        File file = ZapisDoSouboru.getAlbumStorageDir(sourceDir, idMereni + "_" + Build.PRODUCT + "_" + "raw" + ".txt");
+        File file = ZapisDoSouboru.getAlbumStorageDir(sourceDir, "m" + idMereni + "_" + Build.PRODUCT + "_" + "raw" + ".txt");
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("file/*");
         intent.putExtra(Intent.EXTRA_STREAM, Uri.parse(file.getPath()));
         startActivity(Intent.createChooser(intent, "title"));
+    }
+
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
