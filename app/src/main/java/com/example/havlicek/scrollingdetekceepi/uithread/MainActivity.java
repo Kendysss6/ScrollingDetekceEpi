@@ -13,20 +13,30 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Messenger;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.havlicek.scrollingdetekceepi.R;
+import com.example.havlicek.scrollingdetekceepi.SensorValue;
+import com.example.havlicek.scrollingdetekceepi.ValueHolder;
 import com.example.havlicek.scrollingdetekceepi.asynchtasks.ZapisDoSouboru;
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
+import com.jjoe64.graphview.series.PointsGraphSeries;
 
 import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 public class MainActivity extends Activity {
@@ -104,7 +114,7 @@ public class MainActivity extends Activity {
     private void setGUIKalibrovano(boolean kalibrovano){
         findViewById(R.id.but_detekce).setEnabled(kalibrovano);
         findViewById(R.id.sdilet_but).setEnabled(false);
-        findViewById(R.id.vykresli_but).setEnabled(false);
+        findViewById(R.id.vykresli_but).setEnabled(kalibrovano);
     }
 
     public void onButStartDetekce(View v){
@@ -141,6 +151,29 @@ public class MainActivity extends Activity {
         startActivity(i);
     }
 
+    /**
+     * Pokud budu mít všechny data tj. raw data, lin data, modus data a fft data pak spusti aktivitu Grafy.
+     * Jinak hodi upozorneni "Data zpracovávají, stiskněte později". pmoci Toast
+     * @param v
+     */
+    public void vykresli(View v){
+        ValueHolder vh = new ValueHolder();
+        Intent i = new Intent(this, Grafy.class);
+        i.putExtra("lin", vh.linData);
+        i.putExtra("fft", vh.fft);
+        i.putExtra("raw", vh.rawData);
+        i.putExtra("modus", vh.signalModus);
+        if(true) {
+            Intent in = new Intent(this, Grafy.class);
+            in.putExtra("sourceDir", sourceDir);
+            startActivity(in);
+        } else {
+            Toast toast = Toast.makeText(this, "Data zpracovávají, stiskněte později", Toast.LENGTH_SHORT);
+            toast.show();
+        }
+
+    }
+
     public void shit(View v){
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
         editor.putBoolean("kalibrovano", false);
@@ -155,6 +188,10 @@ public class MainActivity extends Activity {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             Log.d("MainActivity","Broadcastreciever" + action);
+            if(intent.hasExtra("ArraylistMeasuring")){
+                ArrayList<SensorValue> l = intent.getParcelableArrayListExtra("ArraylistMeasuring");
+                vykresliGraf(l);
+            }
             if(action.equals("DetekceZachvatu")){
 
             } else if(action.equals("Destroying Service")){
@@ -177,6 +214,19 @@ public class MainActivity extends Activity {
         intent.setType("file/*");
         intent.putExtra(Intent.EXTRA_STREAM, Uri.parse(file.getPath()));
         startActivity(Intent.createChooser(intent, "title"));
+    }
+
+    private void vykresliGraf(ArrayList<SensorValue> l){
+        GraphView graph = (GraphView) findViewById(R.id.graph);
+        PointsGraphSeries<DataPoint> series = new PointsGraphSeries<DataPoint>(new DataPoint[] {
+                new DataPoint(0, 1),
+                new DataPoint(1, 5),
+                new DataPoint(2, 3),
+                new DataPoint(3, 2),
+                new DataPoint(4, 6)
+        });
+        series.setSize(5);
+        graph.addSeries(series);
     }
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {

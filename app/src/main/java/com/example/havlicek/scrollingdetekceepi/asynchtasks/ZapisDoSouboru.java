@@ -26,7 +26,7 @@ public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> 
     private String idMereni;
     private String typMereni;
     private String sourceDir;
-    private int index = -1;
+    private int cisloMereni = -1;
 
     public ZapisDoSouboru(String idMereni, String typMereni, String sourceDir){
         this.idMereni = idMereni;
@@ -35,7 +35,7 @@ public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> 
     }
 
     public void setIndex(int i){
-        this.index = i;
+        this.cisloMereni = i;
     }
 
     @Override
@@ -69,7 +69,7 @@ public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> 
                 }
 
                /* if(index != -1){
-                    writer.write("data"+index+" = ");
+                    writer.write("data"+cisloMereni+" = ");
                 } else {
                     writer.write("data = ");
                 }*/
