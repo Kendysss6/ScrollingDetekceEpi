@@ -7,18 +7,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Messenger;
-import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -27,10 +21,9 @@ import android.widget.Toast;
 import com.example.havlicek.scrollingdetekceepi.R;
 import com.example.havlicek.scrollingdetekceepi.SensorValue;
 import com.example.havlicek.scrollingdetekceepi.ValueHolder;
-import com.example.havlicek.scrollingdetekceepi.asynchtasks.ZapisDoSouboru;
+import com.example.havlicek.scrollingdetekceepi.threads.ZapisDoSouboru2;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
-import com.jjoe64.graphview.series.LineGraphSeries;
 import com.jjoe64.graphview.series.PointsGraphSeries;
 
 import java.io.File;
@@ -209,7 +202,7 @@ public class MainActivity extends Activity {
         if (idMereni == null){
             return;
         }
-        File file = ZapisDoSouboru.getAlbumStorageDir(sourceDir, "m" + idMereni + "_" + Build.PRODUCT + "_" + "raw" + ".txt");
+        File file = ZapisDoSouboru2.getAlbumStorageDir(sourceDir, "m" + idMereni + "_" + Build.PRODUCT + "_" + "raw" + ".txt");
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("file/*");
         intent.putExtra(Intent.EXTRA_STREAM, Uri.parse(file.getPath()));

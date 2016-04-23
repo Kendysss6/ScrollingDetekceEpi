@@ -18,10 +18,10 @@ import android.view.View;
 import com.example.havlicek.scrollingdetekceepi.R;
 import com.example.havlicek.scrollingdetekceepi.asynchmereni.ThreadAsynchMereni;
 import com.example.havlicek.scrollingdetekceepi.asynchtasks.LinInterpolace;
-import com.example.havlicek.scrollingdetekceepi.asynchtasks.ZapisDoSouboru;
+import com.example.havlicek.scrollingdetekceepi.threads.LinInterpolace2;
+import com.example.havlicek.scrollingdetekceepi.threads.ZapisDoSouboru2;
 
 import java.io.File;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -116,7 +116,7 @@ public class ServiceDetekce extends Service {
             public void run() {
                 try {
                     String filePath = Environment.getExternalStorageDirectory() + "/logcat.txt";
-                    filePath = ZapisDoSouboru.getAlbumStorageDir(sourceDir,"logcat"+idMereni+".txt").toString();
+                    filePath = ZapisDoSouboru2.getAlbumStorageDir(sourceDir,"logcat"+idMereni+".txt").toString();
                     Log.d("logcat", filePath);
                     Runtime.getRuntime().exec(new String[]{"logcat", "-f", filePath, "-v", "threadtime", "*:V"});
                 } catch (Exception e){
@@ -174,7 +174,7 @@ public class ServiceDetekce extends Service {
             this.idMereni = intent.getStringExtra("idMereni");
             this.sourceDir = intent.getStringExtra("sourceDir");
             // vytvořeni složky kam se bude ukladat data
-            File f = ZapisDoSouboru.getAlbumStorageDir(sourceDir,"");
+            File f = ZapisDoSouboru2.getAlbumStorageDir(sourceDir,"");
             f.mkdirs();
             Log.d("Service", "slozky vytvoreny");
         } else {
@@ -234,7 +234,6 @@ public class ServiceDetekce extends Service {
     public class HandlerService extends Handler{
 
         public static final int MEASURING_FINISHED = 0;
-        public static final int UPDATE_UI = 1;
         public static final int LIN_INTER_FINISHED = 2;
         public static final int MODUS_FINISHED = 3;
         public static final int FFT_FINISHED = 4;
@@ -256,17 +255,14 @@ public class ServiceDetekce extends Service {
         @Override
         public void handleMessage(Message msg){
             ArrayList l;
-            ZapisDoSouboru zapis;
+            ZapisDoSouboru2 zapis;
             Log.d("Service","incoming Message "+kalibrace);
             switch (msg.what){
-                case UPDATE_UI:
-                    // zde budu vysilat zmeny na UI, případně upozorneni že se něco děje
-                    break;
                 case MEASURING_FINISHED:
                     l = (ArrayList) msg.obj;
-                    zapis = new ZapisDoSouboru(idMereni,"raw",sourceDir);
+                    zapis = new ZapisDoSouboru2(l,idMereni,"raw",sourceDir,this);
                     zapis.setIndex(++cisloMereni);
-                    zapis.execute(l); // zapis nezpracovaných hodnot z akcelerometru do souboru
+                    zapis.run(); // zapis nezpracovaných hodnot z akcelerometru do souboru
                     if (kalibrace){ // jediny rozdil, pokud dělam kalibraci, je ,že pouze měřim hodnoty a pošlu je pres Intent zpet
                         Intent i = new Intent("Kalibrace");
                         i.putExtra("Hodnoty", l);
@@ -276,14 +272,15 @@ public class ServiceDetekce extends Service {
                         Intent i = new Intent("DetekceZachvatu");
                         i.putParcelableArrayListExtra("ArraylistMeasuring", l);
                         LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
-                        LinInterpolace interpolace = new LinInterpolace(this);
-                        interpolace.execute(l);
+                        // Linearni interpolace
+                        LinInterpolace2 interpolace = new LinInterpolace2(l, this);
+                        interpolace.start();
                     }
                     break;
                 case LIN_INTER_FINISHED:
                     l = (ArrayList) msg.obj;
-                    zapis = new ZapisDoSouboru(idMereni,"lin",sourceDir);
-                    zapis.execute(l);
+                    zapis = new ZapisDoSouboru2(l,idMereni,"lin",sourceDir,this);
+                    zapis.run();
                     Message msgPom = this.obtainMessage(MODUS_FINISHED, 1,1);
                     this.sendMessage(msgPom);
                     break;
