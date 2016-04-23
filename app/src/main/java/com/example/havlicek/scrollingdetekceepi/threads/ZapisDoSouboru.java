@@ -1,47 +1,38 @@
-package com.example.havlicek.scrollingdetekceepi.asynchtasks;
+package com.example.havlicek.scrollingdetekceepi.threads;
 
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
-import android.os.Message;
+import android.os.Handler;
 import android.util.Log;
 
-import com.example.havlicek.scrollingdetekceepi.SensorValue;
-import com.example.havlicek.scrollingdetekceepi.uithread.ServiceDetekce;
+import com.example.havlicek.scrollingdetekceepi.datatypes.SensorValue;
 
 import org.json.JSONArray;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
-import java.util.List;
+import java.util.ArrayList;
 
 /**
- * Created by Ondřej on 19. 2. 2016.
- * Třída vytvořený pro zápis do složky downloads.
- * <p>Spouští se pouze z {@link ServiceDetekce.HandlerService#handleMessage(Message)}</p>
+ * Created by Havlicek on 23.4.2016.
+ * Třída pro zápis do souboru
  */
-public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> {
+public class ZapisDoSouboru extends Thread{
+    Handler serviceHandler;
     private String idMereni;
     private String typMereni;
     private String sourceDir;
     private int cisloMereni = -1;
+    ArrayList<SensorValue> values;
 
-    public ZapisDoSouboru(String idMereni, String typMereni, String sourceDir){
+    public ZapisDoSouboru(ArrayList<SensorValue> values, String idMereni, String typMereni, String sourceDir, Handler serviceHandler){
         this.idMereni = idMereni;
         this.typMereni = typMereni;
         this.sourceDir = sourceDir;
-    }
-
-    public void setIndex(int i){
-        this.cisloMereni = i;
-    }
-
-    @Override
-    protected synchronized Void doInBackground(List ... params) {
-        Thread.currentThread().setName("Zapis do souboru");
-        save(params);
-        return null;
+        this.serviceHandler = serviceHandler;
+        this.values = values;
+        this.setName("ZapisDoSouboru");
     }
 
     public static File getAlbumStorageDir(String dirInDownloads, String fileName) {
@@ -51,27 +42,32 @@ public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> 
                 dirInDownloads + fileName); // m tam je proto, proto mfile musi zacinat pismenem
     }
 
-    private void save(List ... params){
+    @Override
+    public void run(){
+        ArrayList<SensorValue> sensorValues = this.values;
+        this.values = null; // kvuli GC
         File file = getAlbumStorageDir(sourceDir, "m"+ idMereni +"_"+ Build.PRODUCT + "_" +typMereni+ ".txt");
         try {
             FileOutputStream stream = new FileOutputStream(file, true);
             OutputStreamWriter writer = new OutputStreamWriter(stream, "UTF-8");
-            for (List<SensorValue> sensorValues : params) {
-                JSONArray list = new JSONArray();
-                for (int i = 0; i < sensorValues.size(); i++) {
-                    JSONArray record = new JSONArray();
-                    record.put(sensorValues.get(i).getfX());
-                    record.put(sensorValues.get(i).getfY());
-                    record.put(sensorValues.get(i).getfZ());
-                    record.put(sensorValues.get(i).getTimeStamp());
-                    list.put(record);
+            JSONArray list = new JSONArray();
+            for (int i = 0; i < sensorValues.size(); i++) {
+                JSONArray record = new JSONArray();
+                record.put(sensorValues.get(i).getfX());
+                record.put(sensorValues.get(i).getfY());
+                record.put(sensorValues.get(i).getfZ());
+                record.put(sensorValues.get(i).getTimeStamp());
+                list.put(record);
+                if(isInterrupted()){
+                    break;
                 }
-
-               /* if(index != -1){
-                    writer.write("data"+cisloMereni+" = ");
-                } else {
+            }
+            /* if(index != -1){
+                 writer.write("data"+cisloMereni+" = ");
+            } else {
                     writer.write("data = ");
                 }*/
+            if(!isInterrupted()){
                 writer.write("data = ");
                 //String jsonZapis = list.toString(4).replaceAll("],", "];");
                 //Log.d("json", jsonZapis);
@@ -84,11 +80,16 @@ public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> 
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        if(isInterrupted()){
+            Log.d("Zapis", "Interupted " + idMereni + typMereni);
+        } else {
+            Log.d("Zapis", "Done " + idMereni + typMereni);
+        }
+
     }
 
-    @Override
-    protected void onPostExecute(Void values){
-        Log.d("Zapis","Done "+idMereni+typMereni);
+    public void setIndex(int index){
+        this.cisloMereni = index;
     }
-
 }

@@ -1,38 +1,33 @@
-package com.example.havlicek.scrollingdetekceepi.asynchtasks;
+package com.example.havlicek.scrollingdetekceepi.threads;
 
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import com.example.havlicek.scrollingdetekceepi.SensorValue;
+import com.example.havlicek.scrollingdetekceepi.datatypes.SensorValue;
 import com.example.havlicek.scrollingdetekceepi.uithread.ServiceDetekce;
 
 import java.util.ArrayList;
 import java.util.ListIterator;
 
 /**
- * Created by Ondřej on 24. 2. 2016.
- *
- * Algoritmus
- * 1. Urči sampling frequenci
- * 2. Urči ekvidistatnt spaces
+ * Created by Havlicek on 23.4.2016.
  */
-public class LinInterpolace extends AsyncTask<ArrayList<SensorValue>, Integer, ArrayList<SensorValue>> {
-    private Handler uiHandler;
+public class LinInterpolace extends Thread{
+    private Handler serviceHandler;
+    private ArrayList<SensorValue> pomvalues;
 
-    public LinInterpolace(Handler uiHandler){
-        this.uiHandler = uiHandler;
+    public LinInterpolace(ArrayList<SensorValue> values, Handler serviceHandler){
+        this.serviceHandler = serviceHandler;
+        this.pomvalues = values;
+        this.setName("LinInterpolace");
     }
-    /**
-     * Moznost 1. oneNote / projektovy plan / vypočet algoritmus / lin interpolace
-     * @param params naměřené hodnoty
-     * @return interpolované naměřené hodnoty
-     */
+
     @Override
-    protected ArrayList<SensorValue> doInBackground(ArrayList<SensorValue>... params) {
-        Thread.currentThread().setName("Linearni interpolace");
-        ArrayList<SensorValue> sensorValues = params[0];
+    public void run(){
+        ArrayList<SensorValue> sensorValues = this.pomvalues;
+        this.pomvalues = null; // kvuli GC
+
         ListIterator<SensorValue> iterator = sensorValues.listIterator();
 
         int pocetNamerenychHodnot = sensorValues.size();
@@ -42,7 +37,7 @@ public class LinInterpolace extends AsyncTask<ArrayList<SensorValue>, Integer, A
          */
         long periodaVzorkovani = dobaMereni / (pocetNamerenychHodnot - 1); // zaokrouhlime, je to v nanosekundach
 
-        Log.d("Interpolace","perioda vzorkovani "+periodaVzorkovani);
+        Log.d("Interpolace", "perioda vzorkovani " + periodaVzorkovani);
         Log.d("Interpolace","pocet hodnot "+pocetNamerenychHodnot);
 
         ArrayList<SensorValue> interpolatedValues = new ArrayList<SensorValue>(pocetNamerenychHodnot);
@@ -74,12 +69,9 @@ public class LinInterpolace extends AsyncTask<ArrayList<SensorValue>, Integer, A
                 i++;
             }
         } while (iterator.hasNext());
-        return interpolatedValues;
-    }
 
-    @Override
-    protected void onPostExecute(ArrayList<SensorValue> values){
-        Message msg = uiHandler.obtainMessage(ServiceDetekce.HandlerService.LIN_INTER_FINISHED, values);
-        uiHandler.sendMessage(msg);
+
+        Message msg = serviceHandler.obtainMessage(ServiceDetekce.HandlerService.LIN_INTER_FINISHED, sensorValues);
+        serviceHandler.sendMessage(msg);
     }
 }

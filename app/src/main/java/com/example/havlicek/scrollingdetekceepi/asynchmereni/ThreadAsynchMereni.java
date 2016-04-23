@@ -7,7 +7,7 @@ import android.os.*;
 import android.os.Process;
 import android.util.Log;
 
-import com.example.havlicek.scrollingdetekceepi.SensorValue;
+import com.example.havlicek.scrollingdetekceepi.datatypes.SensorValue;
 import com.example.havlicek.scrollingdetekceepi.uithread.ServiceDetekce;
 
 import java.text.DecimalFormat;

@@ -4,7 +4,8 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 
-import com.example.havlicek.scrollingdetekceepi.ValueHolder;
+import com.example.havlicek.scrollingdetekceepi.datatypes.FFTType;
+import com.example.havlicek.scrollingdetekceepi.datatypes.ModusSignaluType;
 import com.example.havlicek.scrollingdetekceepi.uithread.ServiceDetekce;
 
 import org.apache.commons.math3.complex.Complex;
@@ -19,7 +20,7 @@ import org.apache.commons.math3.transform.TransformType;
  * 1. Urči sampling frequenci
  * 2. Urči ekvidistatnt spaces
  */
-public class FourierTransform extends AsyncTask<ValueHolder, Integer, ValueHolder> {
+public class FourierTransform extends AsyncTask<ModusSignaluType, Integer, FFTType> {
     private final int pocetHodnotFFT = 1024;
     private Handler uiHandler;
 
@@ -32,10 +33,10 @@ public class FourierTransform extends AsyncTask<ValueHolder, Integer, ValueHolde
      * @return interpolované naměřené hodnoty
      */
     @Override
-    protected ValueHolder doInBackground(ValueHolder ... params) {
+    protected FFTType doInBackground(ModusSignaluType... params) {
         Thread.currentThread().setName("FFT");
-        ValueHolder vh = params[0];
-        double [] sensorValues = vh.signalModus;
+        ModusSignaluType vh = params[0];
+        double [] sensorValues = vh.val;
 
         // zeropad na 1024 hodnot
         double [] paddedField;
@@ -63,12 +64,12 @@ public class FourierTransform extends AsyncTask<ValueHolder, Integer, ValueHolde
         FastFourierTransformer fastFourierTransformer = new FastFourierTransformer(DftNormalization.STANDARD);
         Complex [] fft = fastFourierTransformer.transform(paddedField, TransformType.FORWARD);
 
-        vh.fft = fft;
-        return vh;
+        FFTType fftVal = new FFTType(fft);
+        return fftVal;
     }
 
     @Override
-    protected void onPostExecute(ValueHolder values){
+    protected void onPostExecute(FFTType values){
         Message msg = uiHandler.obtainMessage(ServiceDetekce.HandlerService.FFT_FINISHED, values);
         uiHandler.sendMessage(msg);
     }

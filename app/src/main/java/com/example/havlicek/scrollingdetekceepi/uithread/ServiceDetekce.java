@@ -17,9 +17,8 @@ import android.view.View;
 
 import com.example.havlicek.scrollingdetekceepi.R;
 import com.example.havlicek.scrollingdetekceepi.asynchmereni.ThreadAsynchMereni;
-import com.example.havlicek.scrollingdetekceepi.asynchtasks.LinInterpolace;
-import com.example.havlicek.scrollingdetekceepi.threads.LinInterpolace2;
-import com.example.havlicek.scrollingdetekceepi.threads.ZapisDoSouboru2;
+import com.example.havlicek.scrollingdetekceepi.threads.LinInterpolace;
+import com.example.havlicek.scrollingdetekceepi.threads.ZapisDoSouboru;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -27,7 +26,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class ServiceDetekce extends Service {
-    //private Looper serviceLooper;
+    private Looper serviceLooper;
     private Handler handlerService;
     /**
      * Handler ktery predava Messages a runables do Messagequeue zaznamového vlakna.
@@ -90,6 +89,7 @@ public class ServiceDetekce extends Service {
         // Service Thread
         HandlerThread thread = new HandlerThread("Service Detekce", Process.THREAD_PRIORITY_FOREGROUND);
         thread.start();
+        this.serviceLooper = thread.getLooper();
         // Handler for Service
         handlerService = new HandlerService(thread.getLooper());
         // create new thread for asynch sampling with its handler
@@ -111,25 +111,20 @@ public class ServiceDetekce extends Service {
     @Override
     public void onDestroy() {
         Log.d("ServiceDetekce", "onDestroy()");
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    String filePath = Environment.getExternalStorageDirectory() + "/logcat.txt";
-                    filePath = ZapisDoSouboru2.getAlbumStorageDir(sourceDir,"logcat"+idMereni+".txt").toString();
-                    Log.d("logcat", filePath);
-                    Runtime.getRuntime().exec(new String[]{"logcat", "-f", filePath, "-v", "threadtime", "*:V"});
-                } catch (Exception e){
-                    Log.d("logcat","fail to save logcat");
-                }
-
-            }
-        }).start();
         LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(new Intent("Destroying Service"));
         if (timer != null) {timer.cancel();}
         mSensorManager.unregisterListener(threadAsynchMereni);
         threadAsynchMereni.quit();
+        serviceLooper.quit();
         wakeLock.release();
+       // mozna udělat v jinym threadu
+        try {
+            String filePath = ZapisDoSouboru.getAlbumStorageDir(sourceDir, "logcat" + idMereni + ".txt").toString();
+            Log.d("logcat", filePath);
+            Runtime.getRuntime().exec(new String[]{"logcat", "-f", filePath, "-v", "threadtime", "*:V"});
+        } catch (Exception e){
+            Log.d("logcat","fail to save logcat");
+        }
         Log.d("wakelock", "released");
     }
 
@@ -174,7 +169,7 @@ public class ServiceDetekce extends Service {
             this.idMereni = intent.getStringExtra("idMereni");
             this.sourceDir = intent.getStringExtra("sourceDir");
             // vytvořeni složky kam se bude ukladat data
-            File f = ZapisDoSouboru2.getAlbumStorageDir(sourceDir,"");
+            File f = ZapisDoSouboru.getAlbumStorageDir(sourceDir, "");
             f.mkdirs();
             Log.d("Service", "slozky vytvoreny");
         } else {
@@ -255,12 +250,12 @@ public class ServiceDetekce extends Service {
         @Override
         public void handleMessage(Message msg){
             ArrayList l;
-            ZapisDoSouboru2 zapis;
+            ZapisDoSouboru zapis;
             Log.d("Service","incoming Message "+kalibrace);
             switch (msg.what){
                 case MEASURING_FINISHED:
                     l = (ArrayList) msg.obj;
-                    zapis = new ZapisDoSouboru2(l,idMereni,"raw",sourceDir,this);
+                    zapis = new ZapisDoSouboru(l,idMereni,"raw",sourceDir,this);
                     zapis.setIndex(++cisloMereni);
                     zapis.run(); // zapis nezpracovaných hodnot z akcelerometru do souboru
                     if (kalibrace){ // jediny rozdil, pokud dělam kalibraci, je ,že pouze měřim hodnoty a pošlu je pres Intent zpet
@@ -273,14 +268,19 @@ public class ServiceDetekce extends Service {
                         i.putParcelableArrayListExtra("ArraylistMeasuring", l);
                         LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
                         // Linearni interpolace
-                        LinInterpolace2 interpolace = new LinInterpolace2(l, this);
+                        LinInterpolace interpolace = new LinInterpolace(l, this);
                         interpolace.start();
                     }
                     break;
                 case LIN_INTER_FINISHED:
                     l = (ArrayList) msg.obj;
-                    zapis = new ZapisDoSouboru2(l,idMereni,"lin",sourceDir,this);
+                    zapis = new ZapisDoSouboru(l,idMereni,"lin",sourceDir,this);
                     zapis.run();
+
+                    Intent i = new Intent("DetekceZachvatu");
+                    i.putParcelableArrayListExtra("ArraylistInterpolace", l);
+                    LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
+
                     Message msgPom = this.obtainMessage(MODUS_FINISHED, 1,1);
                     this.sendMessage(msgPom);
                     break;

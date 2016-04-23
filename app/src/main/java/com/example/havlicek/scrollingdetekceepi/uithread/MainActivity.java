@@ -7,8 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
@@ -19,14 +17,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.havlicek.scrollingdetekceepi.R;
-import com.example.havlicek.scrollingdetekceepi.SensorValue;
-import com.example.havlicek.scrollingdetekceepi.ValueHolder;
-import com.example.havlicek.scrollingdetekceepi.threads.ZapisDoSouboru2;
-import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.series.DataPoint;
-import com.jjoe64.graphview.series.PointsGraphSeries;
+import com.example.havlicek.scrollingdetekceepi.datatypes.SensorValue;
 
-import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -37,6 +29,16 @@ public class MainActivity extends Activity {
     private String idMereni = null;
     private String sourceDir = null;
     private SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
+
+
+    /**
+     * Pamatuju si posledni mereni
+     */
+    private ArrayList<SensorValue> raw = null;
+    /**
+     * Pamatuju si posledni interpolaci do te doby nez prijde nove mereni
+     */
+    private ArrayList<SensorValue> lin = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,7 +108,7 @@ public class MainActivity extends Activity {
 
     private void setGUIKalibrovano(boolean kalibrovano){
         findViewById(R.id.but_detekce).setEnabled(kalibrovano);
-        findViewById(R.id.sdilet_but).setEnabled(false);
+        //findViewById(R.id.sdilet_but).setEnabled(false);
         findViewById(R.id.vykresli_but).setEnabled(kalibrovano);
     }
 
@@ -150,12 +152,14 @@ public class MainActivity extends Activity {
      * @param v
      */
     public void vykresli(View v){
-        ValueHolder vh = new ValueHolder();
+        //FFTType vh = new FFTType();
         Intent i = new Intent(this, Grafy.class);
+        /*
         i.putExtra("lin", vh.linData);
         i.putExtra("fft", vh.fft);
         i.putExtra("raw", vh.rawData);
         i.putExtra("modus", vh.signalModus);
+        */
         if(true) {
             Intent in = new Intent(this, Grafy.class);
             in.putExtra("sourceDir", sourceDir);
@@ -180,47 +184,27 @@ public class MainActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            Log.d("MainActivity","Broadcastreciever" + action);
+            Log.d("MainActivity","Broadcastreciever " + action);
             if(intent.hasExtra("ArraylistMeasuring")){
-                ArrayList<SensorValue> l = intent.getParcelableArrayListExtra("ArraylistMeasuring");
-                vykresliGraf(l);
+                raw = intent.getParcelableArrayListExtra("ArraylistMeasuring");
+                // nove mereni
+                lin = null;
+            }
+            if(intent.hasExtra("ArraylistInterpolace")){
+                ArrayList<SensorValue> lin = intent.getParcelableArrayListExtra("ArraylistMeasuring");
             }
             if(action.equals("DetekceZachvatu")){
 
             } else if(action.equals("Destroying Service")){
-                Button b = (Button) findViewById(R.id.but_detekce);
-                detectionOff = true;
-                b.setText(R.string.start);
+                if(android.os.Build.VERSION.SDK_INT >= 21) {
+                    finishAndRemoveTask();
+                } else {
+                    finish();
+                }
+                System.exit(0);
             }
-            // Log.d("broadcast", action);
-            Button b = (Button) findViewById(R.id.shitButton);
-            b.setText(action);
         }
     };
-
-    public void shareFile(View v){
-        if (idMereni == null){
-            return;
-        }
-        File file = ZapisDoSouboru2.getAlbumStorageDir(sourceDir, "m" + idMereni + "_" + Build.PRODUCT + "_" + "raw" + ".txt");
-        Intent intent = new Intent(Intent.ACTION_SEND);
-        intent.setType("file/*");
-        intent.putExtra(Intent.EXTRA_STREAM, Uri.parse(file.getPath()));
-        startActivity(Intent.createChooser(intent, "title"));
-    }
-
-    private void vykresliGraf(ArrayList<SensorValue> l){
-        GraphView graph = (GraphView) findViewById(R.id.graph);
-        PointsGraphSeries<DataPoint> series = new PointsGraphSeries<DataPoint>(new DataPoint[] {
-                new DataPoint(0, 1),
-                new DataPoint(1, 5),
-                new DataPoint(2, 3),
-                new DataPoint(3, 2),
-                new DataPoint(4, 6)
-        });
-        series.setSize(5);
-        graph.addSeries(series);
-    }
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);

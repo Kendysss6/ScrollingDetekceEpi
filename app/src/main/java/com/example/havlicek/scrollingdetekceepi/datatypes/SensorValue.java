@@ -1,4 +1,4 @@
-package com.example.havlicek.scrollingdetekceepi;
+package com.example.havlicek.scrollingdetekceepi.datatypes;
 
 import android.os.Parcel;
 import android.os.Parcelable;

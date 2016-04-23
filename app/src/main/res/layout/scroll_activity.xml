@@ -215,14 +215,6 @@
                     android:layout_column="1"
                     android:layout_gravity="center_horizontal" />
             </GridLayout>
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:text="@string/sdilet_mereni"
-                android:id="@+id/sdilet_but"
-                android:onClick="shareFile" />
         </LinearLayout>
 
 

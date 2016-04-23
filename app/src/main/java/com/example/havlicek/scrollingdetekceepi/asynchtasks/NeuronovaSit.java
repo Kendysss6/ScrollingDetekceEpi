@@ -5,7 +5,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import com.example.havlicek.scrollingdetekceepi.SensorValue;
+import com.example.havlicek.scrollingdetekceepi.datatypes.SensorValue;
 import com.example.havlicek.scrollingdetekceepi.uithread.ServiceDetekce;
 
 import java.util.ArrayList;

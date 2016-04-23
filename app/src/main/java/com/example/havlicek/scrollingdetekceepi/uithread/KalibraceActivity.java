@@ -16,9 +16,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.example.havlicek.scrollingdetekceepi.R;
-import com.example.havlicek.scrollingdetekceepi.SensorValue;
+import com.example.havlicek.scrollingdetekceepi.datatypes.SensorValue;
 import com.example.havlicek.scrollingdetekceepi.asynchmereni.ThreadAsynchMereni;
-import com.example.havlicek.scrollingdetekceepi.asynchtasks.LinInterpolace;
+import com.example.havlicek.scrollingdetekceepi.threads.LinInterpolace;
 
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 
