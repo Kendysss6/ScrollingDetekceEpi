@@ -8,12 +8,6 @@ import android.util.Log;
 import com.example.havlicek.scrollingdetekceepi.SensorValue;
 import com.example.havlicek.scrollingdetekceepi.uithread.ServiceDetekce;
 
-import org.apache.commons.math3.complex.Complex;
-import org.apache.commons.math3.distribution.LogisticDistribution;
-import org.apache.commons.math3.transform.DftNormalization;
-import org.apache.commons.math3.transform.FastFourierTransformer;
-import org.apache.commons.math3.transform.TransformType;
-
 import java.util.ArrayList;
 import java.util.ListIterator;
 
@@ -85,7 +79,7 @@ public class LinInterpolace extends AsyncTask<ArrayList<SensorValue>, Integer, A
 
     @Override
     protected void onPostExecute(ArrayList<SensorValue> values){
-        Message msg = uiHandler.obtainMessage(ServiceDetekce.HandlerUI.LIN_INTER_FINISHED, values);
+        Message msg = uiHandler.obtainMessage(ServiceDetekce.HandlerService.LIN_INTER_FINISHED, values);
         uiHandler.sendMessage(msg);
     }
 }

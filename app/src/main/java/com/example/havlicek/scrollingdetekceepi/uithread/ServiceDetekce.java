@@ -7,20 +7,15 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Looper;
-import android.os.Message;
-import android.os.PowerManager;
+import android.os.*;
 import android.os.PowerManager.WakeLock;
+import android.os.Process;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 
 import com.example.havlicek.scrollingdetekceepi.R;
-import com.example.havlicek.scrollingdetekceepi.SensorValue;
 import com.example.havlicek.scrollingdetekceepi.asynchmereni.ThreadAsynchMereni;
 import com.example.havlicek.scrollingdetekceepi.asynchtasks.LinInterpolace;
 import com.example.havlicek.scrollingdetekceepi.asynchtasks.ZapisDoSouboru;
@@ -32,7 +27,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class ServiceDetekce extends Service {
-    private Handler handlerUI;
+    //private Looper serviceLooper;
+    private Handler handlerService;
     /**
      * Handler ktery predava Messages a runables do Messagequeue zaznamového vlakna.
      * Messagequeue se vytvoří když je k vlaknu přiřazen Looper, ktery defaultně není přiřazen k vlaknu.
@@ -90,10 +86,14 @@ public class ServiceDetekce extends Service {
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         // Load offsets
         SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(this);
-        // Handler for user interface
-        handlerUI = new HandlerUI(new WeakReference<ServiceDetekce>(this));
+
+        // Service Thread
+        HandlerThread thread = new HandlerThread("Service Detekce", Process.THREAD_PRIORITY_FOREGROUND);
+        thread.start();
+        // Handler for Service
+        handlerService = new HandlerService(thread.getLooper());
         // create new thread for asynch sampling with its handler
-        threadAsynchMereni = new ThreadAsynchMereni("Asynchronní měření", handlerUI,
+        threadAsynchMereni = new ThreadAsynchMereni("Asynchronní měření", handlerService,
                 p.getFloat("offsetX", 0f), p.getFloat("offsetY", 0f), p.getFloat("offsetZ", 0f));
         // its handler
         handlerAsynchMereni = threadAsynchMereni.getHandlerThread();
@@ -231,8 +231,7 @@ public class ServiceDetekce extends Service {
      * Handler, který dostává naměřené hodnoty a stará se o další vypočty a dále nastavuje a vytváří nové Thready pro zápis a výpočet.
      * POUZE ZDE SE SPOUSTI ZAPIS HODNOT DO SOUBORU.
      */
-    public static class HandlerUI extends Handler{
-        WeakReference<ServiceDetekce> ref;
+    public class HandlerService extends Handler{
 
         public static final int MEASURING_FINISHED = 0;
         public static final int UPDATE_UI = 1;
@@ -243,10 +242,8 @@ public class ServiceDetekce extends Service {
 
         private int cisloMereni = 0;
 
-        public HandlerUI(WeakReference<ServiceDetekce> r){
-            super(Looper.getMainLooper());
-            ref = r;
-
+        public HandlerService(Looper looper){
+            super(looper);
         }
 
         /**
@@ -260,32 +257,32 @@ public class ServiceDetekce extends Service {
         public void handleMessage(Message msg){
             ArrayList l;
             ZapisDoSouboru zapis;
-            Log.d("Service","incoming Message "+ref.get().kalibrace);
+            Log.d("Service","incoming Message "+kalibrace);
             switch (msg.what){
                 case UPDATE_UI:
                     // zde budu vysilat zmeny na UI, případně upozorneni že se něco děje
                     break;
                 case MEASURING_FINISHED:
                     l = (ArrayList) msg.obj;
-                    zapis = new ZapisDoSouboru(ref.get().idMereni,"raw",ref.get().sourceDir);
+                    zapis = new ZapisDoSouboru(idMereni,"raw",sourceDir);
                     zapis.setIndex(++cisloMereni);
                     zapis.execute(l); // zapis nezpracovaných hodnot z akcelerometru do souboru
-                    if (ref.get().kalibrace){ // jediny rozdil, pokud dělam kalibraci, je ,že pouze měřim hodnoty a pošlu je pres Intent zpet
+                    if (kalibrace){ // jediny rozdil, pokud dělam kalibraci, je ,že pouze měřim hodnoty a pošlu je pres Intent zpet
                         Intent i = new Intent("Kalibrace");
                         i.putExtra("Hodnoty", l);
                         i.putParcelableArrayListExtra("Array list", l);
-                        LocalBroadcastManager.getInstance(ref.get()).sendBroadcast(i);
+                        LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
                     } else {
                         Intent i = new Intent("DetekceZachvatu");
                         i.putParcelableArrayListExtra("ArraylistMeasuring", l);
-                        LocalBroadcastManager.getInstance(ref.get()).sendBroadcast(i);
+                        LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
                         LinInterpolace interpolace = new LinInterpolace(this);
                         interpolace.execute(l);
                     }
                     break;
                 case LIN_INTER_FINISHED:
                     l = (ArrayList) msg.obj;
-                    zapis = new ZapisDoSouboru(ref.get().idMereni,"lin",ref.get().sourceDir);
+                    zapis = new ZapisDoSouboru(idMereni,"lin",sourceDir);
                     zapis.execute(l);
                     Message msgPom = this.obtainMessage(MODUS_FINISHED, 1,1);
                     this.sendMessage(msgPom);

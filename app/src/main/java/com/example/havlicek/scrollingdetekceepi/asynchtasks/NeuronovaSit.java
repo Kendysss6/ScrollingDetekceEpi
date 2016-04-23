@@ -8,12 +8,6 @@ import android.util.Log;
 import com.example.havlicek.scrollingdetekceepi.SensorValue;
 import com.example.havlicek.scrollingdetekceepi.uithread.ServiceDetekce;
 
-import org.apache.commons.math3.complex.Complex;
-import org.apache.commons.math3.distribution.LogisticDistribution;
-import org.apache.commons.math3.transform.DftNormalization;
-import org.apache.commons.math3.transform.FastFourierTransformer;
-import org.apache.commons.math3.transform.TransformType;
-
 import java.util.ArrayList;
 import java.util.ListIterator;
 
@@ -101,7 +95,7 @@ public class NeuronovaSit extends AsyncTask<ArrayList<SensorValue>, Integer, Arr
 
     @Override
     protected void onPostExecute(ArrayList<SensorValue> values){
-        Message msg = uiHandler.obtainMessage(ServiceDetekce.HandlerUI.KLASIFICATION_FINISHED, 1 | 9 ,1);
+        Message msg = uiHandler.obtainMessage(ServiceDetekce.HandlerService.KLASIFICATION_FINISHED, 1 | 9 ,1);
         uiHandler.sendMessage(msg);
     }
 }

@@ -3,7 +3,6 @@ package com.example.havlicek.scrollingdetekceepi.asynchtasks;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 
 import com.example.havlicek.scrollingdetekceepi.SensorValue;
 import com.example.havlicek.scrollingdetekceepi.ValueHolder;
@@ -54,7 +53,7 @@ public class ModusSignalu extends AsyncTask<ArrayList<SensorValue>, Integer, Val
 
     @Override
     protected void onPostExecute(ValueHolder values){
-        Message msg = uiHandler.obtainMessage(ServiceDetekce.HandlerUI.MODUS_FINISHED, 1, 0, values);
+        Message msg = uiHandler.obtainMessage(ServiceDetekce.HandlerService.MODUS_FINISHED, 1, 0, values);
         uiHandler.sendMessage(msg);
     }
 }

@@ -14,13 +14,12 @@ import org.json.JSONArray;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by Ondřej on 19. 2. 2016.
  * Třída vytvořený pro zápis do složky downloads.
- * <p>Spouští se pouze z {@link ServiceDetekce.HandlerUI#handleMessage(Message)}</p>
+ * <p>Spouští se pouze z {@link ServiceDetekce.HandlerService#handleMessage(Message)}</p>
  */
 public class ZapisDoSouboru extends AsyncTask<List<SensorValue>, Integer, Void> {
     private String idMereni;

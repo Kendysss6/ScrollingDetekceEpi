@@ -5,7 +5,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.os.*;
 import android.os.Process;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.example.havlicek.scrollingdetekceepi.SensorValue;
@@ -14,10 +13,7 @@ import com.example.havlicek.scrollingdetekceepi.uithread.ServiceDetekce;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Locale;
 
 /**
@@ -92,7 +88,7 @@ public class ThreadAsynchMereni extends HandlerThread implements SensorEventList
             switch (msg.what){
                 case GET_VALUES:
                     Message m = Message.obtain();
-                    m.what = ServiceDetekce.HandlerUI.MEASURING_FINISHED;
+                    m.what = ServiceDetekce.HandlerService.MEASURING_FINISHED;
                     m.obj = ThreadAsynchMereni.this.values;
                     values = new ArrayList<SensorValue>(ServiceDetekce.ODHADOVANY_POCET_PRVKU + pocetPrvkuNavic);
                     uiHandler.sendMessage(m);

@@ -3,20 +3,14 @@ package com.example.havlicek.scrollingdetekceepi.asynchtasks;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 
-import com.example.havlicek.scrollingdetekceepi.SensorValue;
 import com.example.havlicek.scrollingdetekceepi.ValueHolder;
 import com.example.havlicek.scrollingdetekceepi.uithread.ServiceDetekce;
 
 import org.apache.commons.math3.complex.Complex;
-import org.apache.commons.math3.distribution.LogisticDistribution;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
-
-import java.util.ArrayList;
-import java.util.ListIterator;
 
 /**
  * Created by Ondřej on 24. 2. 2016.
@@ -75,7 +69,7 @@ public class FourierTransform extends AsyncTask<ValueHolder, Integer, ValueHolde
 
     @Override
     protected void onPostExecute(ValueHolder values){
-        Message msg = uiHandler.obtainMessage(ServiceDetekce.HandlerUI.FFT_FINISHED, values);
+        Message msg = uiHandler.obtainMessage(ServiceDetekce.HandlerService.FFT_FINISHED, values);
         uiHandler.sendMessage(msg);
     }
 }
