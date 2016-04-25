@@ -13,7 +13,8 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".uithread.MainActivity"
-            android:label="@string/app_name">
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"> <!-- Musít být portrait nebo landscape aby to nevolalo ondestroy pri orientationChange() -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

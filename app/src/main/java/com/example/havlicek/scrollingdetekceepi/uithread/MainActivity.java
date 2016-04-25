@@ -3,11 +3,19 @@ package com.example.havlicek.scrollingdetekceepi.uithread;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.Messenger;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -30,6 +38,9 @@ public class MainActivity extends Activity {
     private String sourceDir = null;
     private SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
 
+    private final int VYKRESLI_RAW = 1;
+    private final int VYKRESLI_LIN = 2;
+    private final int VYKRESLI_FFT = 3;
 
     /**
      * Pamatuju si posledni mereni
@@ -50,9 +61,21 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.d("MainActivity", "onDestroy()");
+        Log.d("MainActivity", "onDestroy() activity and Service");
         stopService(new Intent(this, ServiceDetekce.class));
     }
+/* Moznost jak zabranit orientacim
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        // Checks the orientation of the screen
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            Toast.makeText(this, "landscape", Toast.LENGTH_SHORT).show();
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
+            Toast.makeText(this, "portrait", Toast.LENGTH_SHORT).show();
+        }
+    }*/
 
     @Override
     protected  void onStart(){
@@ -98,6 +121,32 @@ public class MainActivity extends Activity {
             detectionOff = true;
             b.setText(R.string.start);
         }
+
+        // smazat
+        /*
+        SensorManager mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        Sensor mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        TextView text = (TextView) findViewById(R.id.pomText);
+        String textDisplay;
+        textDisplay =               "LOL"+mAccelerometer.getMaximumRange();
+        textDisplay = textDisplay+"\nLOL"+mAccelerometer.getMinDelay();
+        textDisplay = textDisplay+"\nLOL"+mAccelerometer.getName();
+        textDisplay = textDisplay+"\nLOL"+mAccelerometer.getPower();
+        textDisplay = textDisplay+"\nLOL"+mAccelerometer.getResolution();
+        textDisplay = textDisplay+"\nLOL"+mAccelerometer.getType();
+        textDisplay = textDisplay+"\nLOL"+mAccelerometer.getVendor();
+        textDisplay = textDisplay+"\nLOL"+mAccelerometer.getVersion();
+        textDisplay = textDisplay+"\nLOL"+mAccelerometer.toString();
+        if(Build.VERSION.SDK_INT >= 21){
+            textDisplay = textDisplay+"\nLOL"+mAccelerometer.getMaxDelay();
+            textDisplay = textDisplay+"\nLOL"+mAccelerometer.getStringType();
+            textDisplay = textDisplay+"\nLOL"+mAccelerometer.isWakeUpSensor(); // neco s power saving
+        /}
+        Log.d("SDK",""+Build.VERSION.SDK_INT);
+        Log.d("resolution",""+mAccelerometer.getResolution());
+        text.setText(textDisplay);
+
+        */
     }
 
     @Override
@@ -109,7 +158,7 @@ public class MainActivity extends Activity {
     private void setGUIKalibrovano(boolean kalibrovano){
         findViewById(R.id.but_detekce).setEnabled(kalibrovano);
         //findViewById(R.id.sdilet_but).setEnabled(false);
-        findViewById(R.id.vykresli_but).setEnabled(kalibrovano);
+        //findViewById(R.id.vykresli_but).setEnabled(kalibrovano);
     }
 
     public void onButStartDetekce(View v){
@@ -125,13 +174,16 @@ public class MainActivity extends Activity {
             t.setText(idMereni);
             i.putExtra("idMereni", idMereni);
             i.putExtra("kalibrace", false);
-            i.putExtra("sourceDir",sourceDir);
+            i.putExtra("sourceDir", sourceDir);
             startService(i);
+            //bindService(i, mConnection,Context.BIND_AUTO_CREATE);
+
 
         } else {
             detectionOff = true;
             b.setText(R.string.start);
             // stop service, must explicitly stop because http://developer.android.com/guide/components/bound-services.html#Lifecycle
+            Log.d("MainActivity", "Stopping Service");
             stopService(new Intent(this, ServiceDetekce.class));
         }
     }
@@ -188,11 +240,15 @@ public class MainActivity extends Activity {
             Log.d("MainActivity","Broadcastreciever " + action);
             if(intent.hasExtra("ArraylistMeasuring")){
                 raw = intent.getParcelableArrayListExtra("ArraylistMeasuring");
+                Log.d("list",""+raw);
                 // nove mereni
                 lin = null;
+                // set state
+                setStateVykresli(VYKRESLI_RAW);
             }
             if(intent.hasExtra("ArraylistInterpolace")){
                 lin = intent.getParcelableArrayListExtra("ArraylistMeasuring");
+                setStateVykresli(VYKRESLI_LIN);
             }
             if(action.equals("DetekceZachvatu")){
 
@@ -208,6 +264,34 @@ public class MainActivity extends Activity {
             }*/
         }
     };
+
+    /**
+     * Metoda ktery zpristupni button a checkboxy pro vykresleni, zpravidla 1-3 range
+     * ale je možne i uplne vypnout když pošlem 0
+     * @param numberOfField pocet hodnot které máme naměřených, zatim 0-3
+     */
+    private void setStateVykresli(int numberOfField){
+        View v = findViewById(R.id.raw);
+        if(numberOfField >= VYKRESLI_RAW){
+            v.setEnabled(true);
+            findViewById(R.id.vykresli_but).setEnabled(true);
+        } else {
+            v.setEnabled(false);
+            findViewById(R.id.vykresli_but).setEnabled(false);
+        }
+        v = findViewById(R.id.lin);
+        if(numberOfField >= VYKRESLI_LIN){
+            v.setEnabled(true);
+        } else {
+            v.setEnabled(false);
+        }
+        v = findViewById(R.id.fft);
+        if(numberOfField >= VYKRESLI_FFT){
+            v.setEnabled(true);
+        } else {
+            v.setEnabled(false);
+        }
+    }
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);

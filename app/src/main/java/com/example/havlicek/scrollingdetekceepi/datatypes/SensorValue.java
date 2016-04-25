@@ -14,9 +14,6 @@ public class SensorValue implements Parcelable {
     private float fX;
     private float fY;
     private float fZ;
-    private String x;
-    private String y;
-    private String z;
 
 
     public SensorValue(long timeStamp, float fX, float fY, float fZ, DecimalFormat decimalFormat) {
@@ -24,11 +21,6 @@ public class SensorValue implements Parcelable {
         this.fX = fX;
         this.fY = fY;
         this.fZ = fZ;
-        /*
-        x = decimalFormat.format(fX);
-        y = decimalFormat.format(fY);
-        z = decimalFormat.format(fZ);
-        */
     }
 
     public SensorValue(long timeStamp, float fX, float fY, float fZ) {
@@ -36,9 +28,6 @@ public class SensorValue implements Parcelable {
         this.fX = fX;
         this.fY = fY;
         this.fZ = fZ;
-        x = null;
-        y = null;
-        z = null;
     }
     public long getTimeStamp() {
         return timeStamp;
@@ -67,7 +56,7 @@ public class SensorValue implements Parcelable {
 
     @Override
     public String toString() {
-        return "Hodnota: "+x+" "+ y+" "+z+" "+Long.toString(timeStamp);
+        return "Hodnota: "+fX+" "+ fY+" "+fZ+" "+Long.toString(timeStamp);
     }
 
     @Override

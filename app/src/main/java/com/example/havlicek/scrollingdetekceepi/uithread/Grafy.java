@@ -12,19 +12,19 @@ import com.example.havlicek.scrollingdetekceepi.datatypes.SensorValue;
 import java.util.ArrayList;
 
 public class Grafy extends AppCompatActivity {
+    private ArrayList<SensorValue> raw;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_grafy);
-
+        Intent i = getIntent();
+        raw = i.getParcelableArrayListExtra("RawList");
     }
 
     @Override
     protected  void onStart(){
         super.onStart();
-        Intent i = getIntent();
-        ArrayList<SensorValue> raw = i.getParcelableArrayListExtra("RawList");
     }
 
     @Override
@@ -32,7 +32,7 @@ public class Grafy extends AppCompatActivity {
         super.onResume();
         Intent i = getIntent();
         if (i.hasExtra("RawList")){
-            Toast toast = Toast.makeText(this, "Je to null", Toast.LENGTH_SHORT);
+            Toast toast = Toast.makeText(this, "Má celkem hodnot "+raw.size(), Toast.LENGTH_SHORT);
             toast.show();
         }
     }

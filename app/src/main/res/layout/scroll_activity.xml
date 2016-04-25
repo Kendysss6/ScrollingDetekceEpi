@@ -273,34 +273,37 @@
                     android:layout_marginRight="30dp"
                     android:layout_marginEnd="30dp"
                     android:layout_gravity="center_vertical"
-                    android:onClick="vykresli"/>
+                    android:onClick="vykresli"
+                    android:enabled="false" />
 
-                <RadioGroup
+
+                <LinearLayout
+                    android:orientation="vertical"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-                    <RadioButton
+                    <CheckBox
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/namerena_data"
-                        android:id="@+id/namerenaDat_radio"
+                        android:id="@+id/raw"
                         android:checked="true"
                         android:enabled="false" />
 
-                    <RadioButton
+                    <CheckBox
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/interpolovana_data"
-                        android:id="@+id/inter_radio"
-                        android:enabled="false"/>
+                        android:id="@+id/lin"
+                        android:enabled="false" />
 
-                    <RadioButton
+                    <CheckBox
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/ft"
-                        android:id="@+id/fft_radio"
-                        android:enabled="false"/>
-                </RadioGroup>
+                        android:id="@+id/fft"
+                        android:enabled="false" />
+                </LinearLayout>
             </LinearLayout>
 
             <TextView

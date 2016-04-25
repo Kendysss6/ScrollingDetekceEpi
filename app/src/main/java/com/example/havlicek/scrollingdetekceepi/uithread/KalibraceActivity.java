@@ -137,18 +137,20 @@ public class KalibraceActivity extends AppCompatActivity {
             Log.d("kalibrace","reciver kalibrace aktivity");
             if(!probihaliVypoctyPriMereni){ // prvni mereni probíhalo bez vypoctu pro měření
                 probihaliVypoctyPriMereni = true;
-                spoctiEstMeanAndVar((List) intent.getSerializableExtra("Hodnoty"));
+                //spoctiEstMeanAndVar((List) intent.getSerializableExtra("Hodnoty"));
+                spoctiEstMeanAndVar((List) intent.getParcelableArrayListExtra("ArrayListRaw"));
                 return;
             }
             String action = intent.getAction();
             Log.d("broadcast", action);
-            List<SensorValue> list = (List) intent.getSerializableExtra("Hodnoty");
+            //List<SensorValue> list = (List) intent.getSerializableExtra("Hodnoty");
+            List<SensorValue> list = (List) intent.getParcelableArrayListExtra("ArrayListRaw");
             // vypnutí služby
             findViewById(R.id.progressBarLayout).setVisibility(View.GONE);
             stopService(new Intent(KalibraceActivity.this, ServiceDetekce.class));
             // případné výpočty
             if(list == null){
-                Log.d("mesageReciver","Je to null");
+                Log.d("mesageReciver","Kalibrace, Je to null");
                 return;
             }
             spoctiKalibraci(list);

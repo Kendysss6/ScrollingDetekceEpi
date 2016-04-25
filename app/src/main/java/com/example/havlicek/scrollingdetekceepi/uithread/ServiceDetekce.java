@@ -261,7 +261,7 @@ public class ServiceDetekce extends Service {
                     if (kalibrace){ // jediny rozdil, pokud dělam kalibraci, je ,že pouze měřim hodnoty a pošlu je pres Intent zpet
                         Intent i = new Intent("Kalibrace");
                         i.putExtra("Hodnoty", l);
-                        i.putParcelableArrayListExtra("Array list", l);
+                        i.putParcelableArrayListExtra("ArrayListRaw", l);
                         LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
                     } else {
                         Intent i = new Intent("DetekceZachvatu");
