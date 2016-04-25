@@ -29,6 +29,11 @@ public class SensorValue implements Parcelable {
         this.fY = fY;
         this.fZ = fZ;
     }
+
+    /**
+     * Timestamp in nanosecond
+     * @return timestamp in nanosecond
+     */
     public long getTimeStamp() {
         return timeStamp;
     }

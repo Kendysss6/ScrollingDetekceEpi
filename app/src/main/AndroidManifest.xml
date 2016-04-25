@@ -28,8 +28,7 @@
             android:exported="true" />
 
         <activity android:name=".uithread.KalibraceActivity"/>
-        <activity android:name=".uithread.Grafy"
-            android:screenOrientation="landscape"/>
+        <activity android:name=".uithread.Grafy"/>
     </application>
 
 </manifest>

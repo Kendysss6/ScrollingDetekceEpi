@@ -21,6 +21,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -212,16 +213,30 @@ public class MainActivity extends Activity {
 
         i.putExtra("modus", vh.signalModus);
         */
-        if(true) {
+
+        RadioButton b = (RadioButton) findViewById(R.id.namerenaDat_radio);
+        if(b.isChecked()) {
             Intent in = new Intent(this, Grafy.class);
             in.putExtra("sourceDir", sourceDir);
-            in.putParcelableArrayListExtra("RawList", this.raw);
+            in.putParcelableArrayListExtra("List", this.raw);
             startActivity(in);
-        } else {
-            Toast toast = Toast.makeText(this, "Data zpracovávají, stiskněte později", Toast.LENGTH_SHORT);
-            toast.show();
         }
-
+        b = (RadioButton) findViewById(R.id.inter_radio);
+        if(b.isChecked()) {
+            Intent in = new Intent(this, Grafy.class);
+            in.putExtra("sourceDir", sourceDir);
+            in.putParcelableArrayListExtra("List", this.lin);
+            startActivity(in);
+        }
+        /*
+        b = (RadioButton) findViewById(R.id.fft_radio);
+        if(b.isChecked()) {
+            Intent in = new Intent(this, Grafy.class);
+            in.putExtra("sourceDir", sourceDir);
+            in.putParcelableArrayListExtra("List", this.fft);
+            startActivity(in);
+        }
+        */
     }
 
     public void shit(View v){
@@ -247,7 +262,7 @@ public class MainActivity extends Activity {
                 setStateVykresli(VYKRESLI_RAW);
             }
             if(intent.hasExtra("ArraylistInterpolace")){
-                lin = intent.getParcelableArrayListExtra("ArraylistMeasuring");
+                lin = intent.getParcelableArrayListExtra("ArraylistInterpolace");
                 setStateVykresli(VYKRESLI_LIN);
             }
             if(action.equals("DetekceZachvatu")){
@@ -271,21 +286,22 @@ public class MainActivity extends Activity {
      * @param numberOfField pocet hodnot které máme naměřených, zatim 0-3
      */
     private void setStateVykresli(int numberOfField){
-        View v = findViewById(R.id.raw);
+        View v = findViewById(R.id.namerenaDat_radio);
         if(numberOfField >= VYKRESLI_RAW){
             v.setEnabled(true);
+            ((RadioButton)v).setChecked(true);
             findViewById(R.id.vykresli_but).setEnabled(true);
         } else {
             v.setEnabled(false);
             findViewById(R.id.vykresli_but).setEnabled(false);
         }
-        v = findViewById(R.id.lin);
+        v = findViewById(R.id.inter_radio);
         if(numberOfField >= VYKRESLI_LIN){
             v.setEnabled(true);
         } else {
             v.setEnabled(false);
         }
-        v = findViewById(R.id.fft);
+        v = findViewById(R.id.fft_radio);
         if(numberOfField >= VYKRESLI_FFT){
             v.setEnabled(true);
         } else {
