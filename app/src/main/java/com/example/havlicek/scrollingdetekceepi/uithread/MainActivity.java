@@ -153,16 +153,17 @@ public class MainActivity extends Activity {
      */
     public void vykresli(View v){
         //FFTType vh = new FFTType();
-        Intent i = new Intent(this, Grafy.class);
+      //  Intent i = new Intent(this, Grafy.class);
+       // i.putParcelableArrayListExtra("RawList",this.raw);
         /*
-        i.putExtra("lin", vh.linData);
         i.putExtra("fft", vh.fft);
-        i.putExtra("raw", vh.rawData);
+
         i.putExtra("modus", vh.signalModus);
         */
         if(true) {
             Intent in = new Intent(this, Grafy.class);
             in.putExtra("sourceDir", sourceDir);
+            in.putParcelableArrayListExtra("RawList", this.raw);
             startActivity(in);
         } else {
             Toast toast = Toast.makeText(this, "Data zpracovávají, stiskněte později", Toast.LENGTH_SHORT);
@@ -191,18 +192,20 @@ public class MainActivity extends Activity {
                 lin = null;
             }
             if(intent.hasExtra("ArraylistInterpolace")){
-                ArrayList<SensorValue> lin = intent.getParcelableArrayListExtra("ArraylistMeasuring");
+                lin = intent.getParcelableArrayListExtra("ArraylistMeasuring");
             }
             if(action.equals("DetekceZachvatu")){
 
-            } else if(action.equals("Destroying Service")){
+            }
+            /* Na testovani to zakometuju
+            else if(action.equals("Destroying Service")){
                 if(android.os.Build.VERSION.SDK_INT >= 21) {
                     finishAndRemoveTask();
                 } else {
                     finish();
                 }
                 System.exit(0);
-            }
+            }*/
         }
     };
 
