@@ -62,32 +62,47 @@ public class HighPassFilter extends Thread{
         double [] result = new double[1024];
 
         int i = 0;
-        for (int j = 0; j < val.length/N; j++){
-            for(; i < N*(j+1); i++){
-                pomVal[i - j*N] = val[i];
+        for (int j = 0; j < val.length/128 - 1; j++){
+            // nacteni hodnot
+            for (int k = 0; k < pomVal.length;k++,i++){
+                pomVal[k] = val[i];
             }
+
             RealVector vector = new ArrayRealVector(pomVal);
             double [] rslt = matrix.operate(vector).toArray();
+
             // zapis vysledku
-            for (int m = 0; m < rslt.length; m++){
-                result[m + j*N] = rslt[m];
+            int tmp;
+            if(j == 0){
+                for (int m = 0; m < rslt.length; m++){
+                    result[i - 256 + m] = rslt[m];
+                    Log.d("vysledky", "zápis na "+(i - 256 + m)+ " smycka "+j);
+                }
+            } else {
+                for (int m = rslt.length/2; m < rslt.length; m++){
+                    result[i - 256 + m] = rslt[m];
+                    Log.d("vysledky", "zápis "+m+" na "+(i - 256 + m) + " smycka "+j);
+                }
             }
+            i = i - 128;
         }
 
 
+        i = i + 128; // index posledniho pridaneho cisla
         for (int m = 0; m < N; m++){
             pomVal[m] = val[val.length + m - N];
         }
         RealVector vector = new ArrayRealVector(pomVal);
         double [] rslt = matrix.operate(vector).toArray();
-        for (int m = 0; m < rslt.length; m++){
-            result[result.length + m - rslt.length] = rslt[m];
+
+        // zapis
+        for (int m = 0; m < 1024 - i; m++){
+            result[result.length - 1 - m] = rslt[rslt.length - m - 1];
         }
 
-        for (int m = 0; m < result.length; m++){
-            Log.d("vysledky",""+result[m]);
-        }
-
+        /*for (int m = 0; m < result.length; m++){
+            Log.d("vysledky",""+result[m] + " index "+m);
+        }*/
 
         //Log.d("pad", "" + fVal);
         // algoritmus

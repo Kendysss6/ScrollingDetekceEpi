@@ -11,8 +11,16 @@ import org.apache.commons.math3.complex.Complex;
  */
 public class ModusSignaluType implements Parcelable {
     public double [] val;
+    /**
+     * Cas v nano sekundách
+     */
     public long [] time;
 
+    /**
+     *
+     * @param val
+     * @param time cas v nansekundach
+     */
     public ModusSignaluType(double [] val, long [] time){
         this.time = time;
         this.val = val;

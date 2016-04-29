@@ -21,11 +21,14 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.havlicek.scrollingdetekceepi.R;
+import com.example.havlicek.scrollingdetekceepi.datatypes.FFTType;
+import com.example.havlicek.scrollingdetekceepi.datatypes.ModusSignaluType;
 import com.example.havlicek.scrollingdetekceepi.datatypes.SensorValue;
 
 import java.text.ParseException;
@@ -51,6 +54,13 @@ public class MainActivity extends Activity {
      * Pamatuju si posledni interpolaci do te doby nez prijde nove mereni
      */
     private ArrayList<SensorValue> lin = null;
+
+    /**
+     * Opět si pamatuju posledni
+     */
+    private FFTType fft = null;
+    private ModusSignaluType modus = null;
+    private ModusSignaluType fModus = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -228,6 +238,15 @@ public class MainActivity extends Activity {
             in.putParcelableArrayListExtra("List", this.lin);
             startActivity(in);
         }
+        b = (RadioButton) findViewById(R.id.fft_radio);
+        if(b.isChecked()) {
+            Intent in = new Intent(this, Grafy.class);
+            in.putExtra("sourceDir", sourceDir);
+            in.putExtra("FFT", this.fft);
+            in.putExtra("Modus", this.modus);
+            in.putExtra("FModus",this.fModus);
+            startActivity(in);
+        }
         /*
         b = (RadioButton) findViewById(R.id.fft_radio);
         if(b.isChecked()) {
@@ -244,7 +263,7 @@ public class MainActivity extends Activity {
         editor.putBoolean("kalibrovano", false);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         //String datum = sdf.format(new Date());
-        editor.putString("datum_kalibrace","1970-01-01");
+        editor.putString("datum_kalibrace", "1970-01-01");
         editor.apply();
     }
 
@@ -252,21 +271,54 @@ public class MainActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            Log.d("MainActivity","Broadcastreciever " + action);
+            Log.d("MainActivity", "Broadcastreciever " + action);
+            CheckBox zachovat = (CheckBox)findViewById(R.id.zachovat_data);
             if(intent.hasExtra("ArraylistMeasuring")){
                 raw = intent.getParcelableArrayListExtra("ArraylistMeasuring");
-                Log.d("list",""+raw);
+                //Log.d("list",""+raw);
                 // nove mereni
-                lin = null;
-                // set state
-                setStateVykresli(VYKRESLI_RAW);
+                if(!zachovat.isChecked()){
+                    lin = null;
+                    fft = null;
+                    modus = null;
+                    fModus = null;
+                    // set state
+                    Toast.makeText(MainActivity.this,"Nová data",Toast.LENGTH_SHORT).show();
+                    setStateVykresli(VYKRESLI_RAW);
+                }
             }
             if(intent.hasExtra("ArraylistInterpolace")){
-                lin = intent.getParcelableArrayListExtra("ArraylistInterpolace");
-                setStateVykresli(VYKRESLI_LIN);
+                if(!zachovat.isChecked()){
+                    lin = intent.getParcelableArrayListExtra("ArraylistInterpolace");
+                    setStateVykresli(VYKRESLI_LIN);
+                }
             }
+            if(intent.hasExtra("Modus")){
+                if(!zachovat.isChecked()){
+                    modus = intent.getParcelableExtra("Modus");
+                }
+            }
+            if(intent.hasExtra("FModus")){
+                if(!zachovat.isChecked()){
+                    fModus = intent.getParcelableExtra("FModus");
+                }
+            }
+            if(intent.hasExtra("FFT")){
+                if(!zachovat.isChecked()){
+                    fft = intent.getParcelableExtra("FFT");
+                    setStateVykresli(VYKRESLI_FFT);
+                }
+            }
+
             if(action.equals("DetekceZachvatu")){
 
+            }
+            if (intent.hasExtra("Klasifikace")){
+                boolean klas = intent.getBooleanExtra("Klasifikace", false);
+                int frek = intent.getIntExtra("DomFrek",-1);
+
+                TextView t = (TextView)findViewById(R.id.vysledek_mereni);
+                t.setText("Klasif. "+klas+" dom.frek. "+((frek * 100.0) / 1024));
             }
             /* Na testovani to zakometuju
             else if(action.equals("Destroying Service")){

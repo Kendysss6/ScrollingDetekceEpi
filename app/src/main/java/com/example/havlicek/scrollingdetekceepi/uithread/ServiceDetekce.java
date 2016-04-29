@@ -17,8 +17,18 @@ import android.view.View;
 
 import com.example.havlicek.scrollingdetekceepi.R;
 import com.example.havlicek.scrollingdetekceepi.asynchmereni.ThreadAsynchMereni;
+import com.example.havlicek.scrollingdetekceepi.asynchtasks.MatrixDInv;
+import com.example.havlicek.scrollingdetekceepi.datatypes.FFTType;
+import com.example.havlicek.scrollingdetekceepi.datatypes.ModusSignaluType;
+import com.example.havlicek.scrollingdetekceepi.threads.FastFT;
+import com.example.havlicek.scrollingdetekceepi.threads.HighPassFilter;
+import com.example.havlicek.scrollingdetekceepi.threads.Klasifikace;
 import com.example.havlicek.scrollingdetekceepi.threads.LinInterpolace;
+import com.example.havlicek.scrollingdetekceepi.threads.Modus;
 import com.example.havlicek.scrollingdetekceepi.threads.ZapisDoSouboru;
+
+import org.apache.commons.math3.complex.Complex;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -59,7 +69,7 @@ public class ServiceDetekce extends Service {
      * Odhadovany počet prvku se kterymi budeme počítat fourierovu transformaci a klasifikaci
      */
     public static final int ODHADOVANY_POCET_PRVKU = 512;
-
+    public RealMatrix matrix = null;
     /**
      * Perioda, za kterou časovač {@link ServiceDetekce#timer} spouští úkol {@link ServiceDetekce#getTask(boolean)}
      */
@@ -106,6 +116,9 @@ public class ServiceDetekce extends Service {
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyWakelockTag");
         wakeLock.acquire();
         Log.d("wakelock", "aquired");
+        Log.d("matrix","start");
+        MatrixDInv matrixDInv = new MatrixDInv(this);
+        matrixDInv.execute();
     }
 
     @Override
@@ -229,7 +242,8 @@ public class ServiceDetekce extends Service {
     public class HandlerService extends Handler{
 
         public static final int MEASURING_FINISHED = 0;
-        public static final int LIN_INTER_FINISHED = 2;
+        public static final int LIN_INTER_FINISHED = 1;
+        public static final int FILTER_FINISHED = 2;
         public static final int MODUS_FINISHED = 3;
         public static final int FFT_FINISHED = 4;
         public static final int KLASIFICATION_FINISHED = 5;
@@ -251,20 +265,22 @@ public class ServiceDetekce extends Service {
         public void handleMessage(Message msg){
             ArrayList l;
             ZapisDoSouboru zapis;
+            ModusSignaluType modus;
+            Intent i;
             Log.d("Service","incoming Message "+kalibrace);
             switch (msg.what){
                 case MEASURING_FINISHED:
                     l = (ArrayList) msg.obj;
                     zapis = new ZapisDoSouboru(l,idMereni,"raw",sourceDir,this);
                     zapis.setIndex(++cisloMereni);
-                    zapis.run(); // zapis nezpracovaných hodnot z akcelerometru do souboru
+                    zapis.start(); // zapis nezpracovaných hodnot z akcelerometru do souboru
                     if (kalibrace){ // jediny rozdil, pokud dělam kalibraci, je ,že pouze měřim hodnoty a pošlu je pres Intent zpet
-                        Intent i = new Intent("Kalibrace");
+                        i = new Intent("Kalibrace");
                         i.putExtra("Hodnoty", l);
                         i.putParcelableArrayListExtra("ArrayListRaw", l);
                         LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
                     } else {
-                        Intent i = new Intent("DetekceZachvatu");
+                        i = new Intent("DetekceZachvatu");
                         i.putParcelableArrayListExtra("ArraylistMeasuring", l);
                         LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
                         // Linearni interpolace
@@ -275,27 +291,53 @@ public class ServiceDetekce extends Service {
                 case LIN_INTER_FINISHED:
                     l = (ArrayList) msg.obj;
                     zapis = new ZapisDoSouboru(l,idMereni,"lin",sourceDir,this);
-                    zapis.run();
+                    zapis.start();
 
-                    Intent i = new Intent("DetekceZachvatu");
+                    i = new Intent("DetekceZachvatu");
                     i.putParcelableArrayListExtra("ArraylistInterpolace", l);
                     LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
 
-                    Message msgPom = this.obtainMessage(MODUS_FINISHED, 1,1);
-                    this.sendMessage(msgPom);
+                    Modus m = new Modus(l,this);
+                    m.start();
                     break;
                 case MODUS_FINISHED:
+                    modus = (ModusSignaluType) msg.obj;
+                    double [] val = modus.val;
+                    /*for(int j = 0; j < val.length; j++){
+                        Log.d("Modus",""+val[j]);
+                    }*/
+                    i = new Intent("DetekceZachvatu");
+                    i.putExtra("Modus",modus);
+                    LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
                     // tady ziskam z message true/false jestli signal ma dostatecnou energii a zda mam pokracovat dal
-                    if (msg.arg1 == 1){
-                        int signalEnergy = msg.arg2;
-                        // energie signalu
-                        // spocteni Fouerierovy transformace
-                    }
+                    HighPassFilter filter = new HighPassFilter(modus,this,matrix);
+                    filter.start();
+                    break;
+                case FILTER_FINISHED:
+                    modus = (ModusSignaluType) msg.obj;
+                    i = new Intent("DetekceZachvatu");
+                    i.putExtra("FModus",modus);
+                    LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
+                    FastFT fft = new FastFT(modus,this);
+                    //fft.start();
+                    fft.run();
                     break;
                 case FFT_FINISHED:
+                    FFTType t = (FFTType) msg.obj;
+                    Complex [] fftpom = t.fft;
+                    Klasifikace k = new Klasifikace(t,this);
+                    k.start();
+                    i = new Intent("DetekceZachvatu");
+                    i.putExtra("FFT",t);
+                    LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
                     // klasifikace
                     break;
                 case KLASIFICATION_FINISHED:
+                    boolean klas = msg.arg1 != 0;
+                    i = new Intent("DetekceZachvatu");
+                    i.putExtra("Klasifikace",klas);
+                    i.putExtra("DomFrek",msg.arg2);
+                    LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
                     break;
                 default:
                     Log.e("message","wrong what message");

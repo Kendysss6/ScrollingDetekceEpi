@@ -237,7 +237,6 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceLarge"
                 android:text="@string/neg_detekce"
                 android:id="@+id/vysledek_mereni"
                 android:layout_gravity="center_horizontal"/>
@@ -304,11 +303,12 @@
                 </RadioGroup>
             </LinearLayout>
 
-            <TextView
+            <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Graph View"
-                android:id="@+id/textView6" />
+                android:text="Zachovat aktuální grafy"
+                android:id="@+id/zachovat_data"
+                android:layout_gravity="center_horizontal" />
 
         </LinearLayout>
 

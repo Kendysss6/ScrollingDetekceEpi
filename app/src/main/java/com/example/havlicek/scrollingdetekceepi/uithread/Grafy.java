@@ -11,11 +11,14 @@ import android.widget.Toast;
 import com.example.havlicek.scrollingdetekceepi.CustomScrollView;
 import com.example.havlicek.scrollingdetekceepi.R;
 import com.example.havlicek.scrollingdetekceepi.datatypes.FFTType;
+import com.example.havlicek.scrollingdetekceepi.datatypes.ModusSignaluType;
 import com.example.havlicek.scrollingdetekceepi.datatypes.SensorValue;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 import com.jjoe64.graphview.series.PointsGraphSeries;
+
+import org.apache.commons.math3.complex.Complex;
 
 import java.util.ArrayList;
 import java.util.Vector;
@@ -31,12 +34,19 @@ public class Grafy extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_grafy);
         Intent i = getIntent();
-        ArrayList<SensorValue> raw = i.getParcelableArrayListExtra("List");
-        if(raw == null){
-            Log.d("Grafy","null");
-            return;
+        if (i.hasExtra("FFT")){
+            FFTType t = i.getParcelableExtra("FFT");
+            if(t == null)return;
+            convertFFT(t);
+        } else {
+            ArrayList<SensorValue> raw = i.getParcelableArrayListExtra("List");
+            if(raw == null){
+                Log.d("Grafy","null");
+                return;
+            }
+            convertArray(raw);
         }
-        convertArray(raw);
+
         LineGraphSeries<DataPoint> seriesX = new LineGraphSeries<DataPoint>(X);
         LineGraphSeries<DataPoint> seriesY = new LineGraphSeries<DataPoint>(Y);
         LineGraphSeries<DataPoint> seriesZ = new LineGraphSeries<DataPoint>(Z);
@@ -51,20 +61,20 @@ public class Grafy extends Activity {
         graphZ.removeAllSeries();
 
         graphX.addSeries(seriesX);
-        graphX.getViewport().setXAxisBoundsManual(true);
+        //graphX.getViewport().setXAxisBoundsManual(true);
         //graphX.getViewport().setScalable(true);
         //graphX.getViewport().setScrollable(true);
-        graphX.getViewport().setMinX(0);
-        graphX.getViewport().setMaxX(10);
+        //graphX.getViewport().setMinX(0);
+        //graphX.getViewport().setMaxX(10);
         graphY.addSeries(seriesY);
-        graphY.getViewport().setXAxisBoundsManual(true);
+        //graphY.getViewport().setXAxisBoundsManual(true);
         //graphY.getViewport().setScalable(true);
         //graphY.getViewport().setScrollable(true);
         graphZ.addSeries(seriesZ);
-        graphZ.getViewport().setXAxisBoundsManual(true);
+        //graphZ.getViewport().setXAxisBoundsManual(true);
         //graphZ.getViewport().setScalable(true);
         //graphZ.getViewport().setScrollable(true);
-        zarovnatGrafy(null);
+        //zarovnatGrafy(null);
     }
 
     @Override
@@ -96,13 +106,54 @@ public class Grafy extends Activity {
         }
     }
 
+    private void convertFFT(FFTType val){
+        Complex [] values = val.fft;
+        ModusSignaluType m = getIntent().getParcelableExtra("Modus");
+        long [] time = m.time;
+        double [] modVal = m.val;
+
+        ModusSignaluType m2 = getIntent().getParcelableExtra("FModus");
+        long [] time2 = m2.time;
+        double [] modVal2 = m2.val;
+
+        X = new DataPoint[values.length/4];
+        Y = new DataPoint[time.length];
+        Z = new DataPoint[time2.length];
+
+        double fs = 100;
+        int N = 1024; // == values.size();
+        // vynuluju DC slozku
+        values[0] = new Complex(0,0);
+        for(int i = 0; i < X.length; i++){
+            X[i] = new DataPoint((i*fs)/N, values[i].abs());
+            //Log.d("Grafy",((double)(i*fs)/N)+" "+values[i].abs());
+        }
+
+        // modus
+        long it = time[0];
+        for(int i = 0; i < time.length; i++){
+            Y[i] = new DataPoint((time[i]-it)*1e-9, modVal[i]);
+            //Log.d("Grafy",((time[i]-it)*1e-9)+" "+modVal[i]);
+
+        }
+
+        // modus filtered
+        long it2 = time2[0];
+        for(int i = 0; i < time.length; i++){
+            Z[i] = new DataPoint((time2[i]-it2)*1e-9, modVal2[i]);
+            //Log.d("Grafy",((time[i]-it)*1e-9)+" "+modVal[i]);
+
+        }
+
+    }
+
     public void stopScroling(View v){
-        CustomScrollView view = (CustomScrollView) findViewById(R.id.myScroll);
-        view.setEnableScrolling(false);
+        //CustomScrollView view = (CustomScrollView) findViewById(R.id.myScroll);
+        //view.setEnableScrolling(false);
     }
     public void zapnoutScroling(View v){
-        CustomScrollView view = (CustomScrollView) findViewById(R.id.myScroll);
-        view.setEnableScrolling(true);
+        //CustomScrollView view = (CustomScrollView) findViewById(R.id.myScroll);
+        //view.setEnableScrolling(true);
     }
     public void zarovnatGrafy(View v){
         double i = X[X.length-1].getX();
