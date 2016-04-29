@@ -47,7 +47,7 @@ public class MatrixDInv extends AsyncTask<Void, Integer, RealMatrix> {
                         case 1: num+=-2*9000;break;
                         case 2: num+=9000;break;
                     }
-                } else if(i == 2) {
+                } else if(i == 1) {
                     switch (j){
                         case 0: num+=-2*9000;break;
                         case 1: num+=1+5*9000;break;
@@ -75,6 +75,12 @@ public class MatrixDInv extends AsyncTask<Void, Integer, RealMatrix> {
                 matrix[i][j] = num;
             }
         }
+        double [][] val = matrix;
+        Log.d("matrix","radka:0; "+val[0][0]+" "+val[0][1]+" "+val[0][2]+" "+val[0][3]+" "+val[0][4]+" "+val[0][5]);
+        Log.d("matrix","radka:1; "+val[1][0]+" "+val[1][1]+" "+val[1][2]+" "+val[1][3]+" "+val[1][4]+" "+val[1][5]);
+        Log.d("matrix","radka:2; "+val[2][0]+" "+val[2][1]+" "+val[2][2]+" "+val[2][3]+" "+val[2][4]+" "+val[2][5]);
+        Log.d("matrix","radka:3; "+val[3][0]+" "+val[3][1]+" "+val[3][2]+" "+val[3][3]+" "+val[3][4]+" "+val[3][5]);
+
 
         RealMatrix m = new Array2DRowRealMatrix(matrix);
         RealMatrix inv = new LUDecomposition(m).getSolver().getInverse();
