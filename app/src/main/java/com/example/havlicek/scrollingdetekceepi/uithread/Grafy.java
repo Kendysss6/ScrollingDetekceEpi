@@ -116,14 +116,14 @@ public class Grafy extends Activity {
         long [] time2 = m2.time;
         double [] modVal2 = m2.val;
 
-        X = new DataPoint[values.length/4];
+        X = new DataPoint[values.length/2];
         Y = new DataPoint[time.length];
         Z = new DataPoint[time2.length];
 
         double fs = 100;
         int N = 1024; // == values.size();
         // vynuluju DC slozku
-        values[0] = new Complex(0,0);
+        //values[0] = new Complex(0,0);
         for(int i = 0; i < X.length; i++){
             X[i] = new DataPoint((i*fs)/N, values[i].abs());
             //Log.d("Grafy",((double)(i*fs)/N)+" "+values[i].abs());

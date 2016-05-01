@@ -38,7 +38,8 @@ public class Modus extends Thread{
             SensorValue sv = iterator.next();
             float X = sv.getfX(),Y = sv.getfY(),Z = sv.getfZ();
             partialEnergy = X*X+Y*Y+Z*Z;
-            modusSignalu[in] = Math.sqrt(partialEnergy);
+            //modusSignalu[in] = Math.sqrt(partialEnergy);
+            modusSignalu[in] = Z;
             time[in] = sv.getTimeStamp();
             in++;
         }
