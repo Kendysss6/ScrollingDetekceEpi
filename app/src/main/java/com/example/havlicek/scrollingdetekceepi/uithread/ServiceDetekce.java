@@ -329,12 +329,12 @@ public class ServiceDetekce extends Service {
                     i.putExtra("FModus", modus);
                     LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
                     FastFT fft = new FastFT(modus,this);
-                    //fft.start();
-                    fft.run();
+                    fft.start();
                     break;
                 case FFT_FINISHED:
                     FFTType t = (FFTType) msg.obj;
-                    Complex [] fftpom = t.fft;
+                    zapis = new ZapisDoSouboru(t,idMereni,"fft",sourceDir,this);
+                    zapis.start();
                     Klasifikace k = new Klasifikace(t,this);
                     k.start();
                     i = new Intent("DetekceZachvatu");

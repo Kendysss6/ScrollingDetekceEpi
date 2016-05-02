@@ -174,7 +174,7 @@ public class Grafy extends Activity {
             t = (TextView) findViewById(R.id.Osa_X);
             t.setText("Jednostraná Fourierova transformace");
             t = (TextView) findViewById(R.id.Osa_Y);
-            t.setText("Nefiltravaný signál");
+            t.setText("Nefiltrovaný signál");
             t = (TextView) findViewById(R.id.Osa_Z);
             t.setText("Signál filtrovaný vysokou propustí");
         }
