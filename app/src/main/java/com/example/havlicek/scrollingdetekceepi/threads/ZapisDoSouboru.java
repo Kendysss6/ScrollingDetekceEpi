@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.util.Log;
 
 import com.example.havlicek.scrollingdetekceepi.datatypes.FFTType;
+import com.example.havlicek.scrollingdetekceepi.datatypes.ModusSignaluType;
 import com.example.havlicek.scrollingdetekceepi.datatypes.SensorValue;
 
 import org.apache.commons.math3.complex.Complex;
@@ -31,6 +32,7 @@ public class ZapisDoSouboru extends Thread{
     private int cisloMereni = -1;
     ArrayList<SensorValue> values;
     FFTType fft;
+    ModusSignaluType mod;
     private int typMereniInt;
 
     private final int RAW = 1;
@@ -62,6 +64,16 @@ public class ZapisDoSouboru extends Thread{
         typMereniInt = FFT;
     }
 
+    public ZapisDoSouboru(ModusSignaluType type, String idMereni, String typMereni, String sourceDir, Handler serviceHandler){
+        this.idMereni = idMereni;
+        this.typMereni = typMereni;
+        this.sourceDir = sourceDir;
+        this.serviceHandler = serviceHandler;
+        this.mod = type;
+        this.setName("ZapisDoSouboru");
+        typMereniInt = MOD;
+    }
+
     public static File getAlbumStorageDir(String dirInDownloads, String fileName) {
         // Get the directory for the user's public pictures directory.
         return new File(
@@ -81,6 +93,7 @@ public class ZapisDoSouboru extends Thread{
                 values = null;
                 break;
             case MOD:
+                zapisModus(mod);
                 break;
             case FFT:
                 zapisFFT(fft);
@@ -160,7 +173,7 @@ public class ZapisDoSouboru extends Thread{
                 //Log.d("json", jsonZapis);
                 //Log.d("jsonFloat",listFloats.toString(4).replaceAll("],", "];"));
                 StringBuilder builder = new StringBuilder();
-                writer.write(list.toString().replaceAll("],", "];").replaceAll("\"","").replace(',',';'));
+                writer.write(list.toString().replaceAll("],", "];").replaceAll("\"", "").replace(',', ';'));
 
                 writer.write(";\n");
             }
@@ -175,7 +188,51 @@ public class ZapisDoSouboru extends Thread{
         } else {
             Log.d("Zapis", "Done " + idMereni + typMereni);
         }
+    }
 
+    private void zapisModus(ModusSignaluType m){
+        File file = getAlbumStorageDir(sourceDir, "m"+ idMereni +"_"+ Build.PRODUCT + "_" +typMereni+ ".txt");
+        double [] x = m.val;
+        long [] time = m.time;
+        try {
+            FileOutputStream stream = new FileOutputStream(file, true);
+            OutputStreamWriter writer = new OutputStreamWriter(stream, "UTF-8");
+            JSONArray list = new JSONArray();
+            for (int i = 0; i < x.length; i++) {
+                JSONArray record = new JSONArray();
+                record.put(time[i]);
+                record.put(x[i]);
+                list.put(record);
+                if(isInterrupted()){
+                    break;
+                }
+            }
+            /* if(index != -1){
+                 writer.write("data"+cisloMereni+" = ");
+            } else {
+                    writer.write("data = ");
+                }*/
+            if(!isInterrupted()){
+                writer.write("data = ");
+                //String jsonZapis = list.toString(4).replaceAll("],", "];");
+                //Log.d("json", jsonZapis);
+                //Log.d("jsonFloat",listFloats.toString(4).replaceAll("],", "];"));
+                StringBuilder builder = new StringBuilder();
+                writer.write(list.toString().replaceAll("],", "];"));
+
+                writer.write(";\n");
+            }
+            writer.close();
+            stream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if(isInterrupted()){
+            Log.d("Zapis", "Interupted " + idMereni + typMereni);
+        } else {
+            Log.d("Zapis", "Done " + idMereni + typMereni);
+        }
     }
 
     public void setIndex(int index){

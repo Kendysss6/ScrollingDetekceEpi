@@ -305,6 +305,9 @@ public class ServiceDetekce extends Service {
                     break;
                 case MODUS_FINISHED:
                     modus = (ModusSignaluType) msg.obj;
+                    zapis = new ZapisDoSouboru(modus,idMereni,"mod",sourceDir,this);
+                    zapis.start();
+
                     double [] timeAnalysisModus = modus.modus;
                     StandardDeviation dev = new StandardDeviation();
                     double sigma = dev.evaluate(timeAnalysisModus);
@@ -325,6 +328,8 @@ public class ServiceDetekce extends Service {
                     break;
                 case FILTER_FINISHED:
                     modus = (ModusSignaluType) msg.obj;
+                    zapis = new ZapisDoSouboru(modus,idMereni,"fmod",sourceDir,this);
+                    zapis.start();
                     i = new Intent("DetekceZachvatu");
                     i.putExtra("FModus", modus);
                     LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
