@@ -29,6 +29,7 @@ import com.example.havlicek.scrollingdetekceepi.threads.ZapisDoSouboru;
 
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -250,6 +251,8 @@ public class ServiceDetekce extends Service {
 
         private int cisloMereni = 0;
 
+        public static final double GRAVITY = 9.8;
+
         public HandlerService(Looper looper){
             super(looper);
         }
@@ -302,21 +305,28 @@ public class ServiceDetekce extends Service {
                     break;
                 case MODUS_FINISHED:
                     modus = (ModusSignaluType) msg.obj;
-                    double [] val = modus.val;
-                    /*for(int j = 0; j < val.length; j++){
-                        Log.d("Modus",""+val[j]);
-                    }*/
-                    i = new Intent("DetekceZachvatu");
-                    i.putExtra("Modus",modus);
-                    LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
-                    // tady ziskam z message true/false jestli signal ma dostatecnou energii a zda mam pokracovat dal
-                    HighPassFilter filter = new HighPassFilter(modus,this,matrix);
-                    filter.start();
+                    double [] timeAnalysisModus = modus.modus;
+                    StandardDeviation dev = new StandardDeviation();
+                    double sigma = dev.evaluate(timeAnalysisModus);
+                    if (sigma <= 0.1 * GRAVITY){
+                        i = new Intent("DetekceZachvatu");
+                        i.putExtra("Modus",modus);
+                        i.putExtra("TimeAnalysis",false);
+                        LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
+                    } else {
+                        i = new Intent("DetekceZachvatu");
+                        i.putExtra("Modus",modus);
+                        i.putExtra("TimeAnalysis",true);
+                        LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
+                        // tady ziskam z message true/false jestli signal ma dostatecnou energii a zda mam pokracovat dal
+                        HighPassFilter filter = new HighPassFilter(modus,this,matrix);
+                        filter.start();
+                    }
                     break;
                 case FILTER_FINISHED:
                     modus = (ModusSignaluType) msg.obj;
                     i = new Intent("DetekceZachvatu");
-                    i.putExtra("FModus",modus);
+                    i.putExtra("FModus", modus);
                     LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
                     FastFT fft = new FastFT(modus,this);
                     //fft.start();

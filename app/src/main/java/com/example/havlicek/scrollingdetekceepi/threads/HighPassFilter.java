@@ -91,7 +91,7 @@ public class HighPassFilter extends Thread{
 
         //Log.d("pad", "" + fVal);
         // algoritmus
-        ModusSignaluType vysledek = new ModusSignaluType(result,sensorValues.time); // s casem nic nedělam ten mužu nechat stejny
+        ModusSignaluType vysledek = new ModusSignaluType(result,sensorValues.time, sensorValues.modus); // s casem nic nedělam ten mužu nechat stejny
 
         Message msg = serviceHandler.obtainMessage(ServiceDetekce.HandlerService.FILTER_FINISHED, vysledek);
         serviceHandler.sendMessage(msg);

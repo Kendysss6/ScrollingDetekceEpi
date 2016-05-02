@@ -344,13 +344,6 @@
                 android:text="New Text"
                 android:id="@+id/textView2" />
 
-            <com.jjoe64.graphview.helper.GraphViewXML
-                android:layout_width="match_parent"
-                android:layout_height="100dip"
-                android:id="@+id/graph"
-                app:seriesData="0=5;2=5;3=0;4=2"
-                app:seriesType="points"
-                app:seriesColor="#ee0000" />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

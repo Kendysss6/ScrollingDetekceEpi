@@ -30,6 +30,7 @@ public class Modus extends Thread{
 
         double [] modusSignalu = new double[sensorValues.size()];
         long [] time = new long[sensorValues.size()];
+        double [] timeAnalysisModus = new double[sensorValues.size()];
 
 
         int in = 0;
@@ -38,12 +39,12 @@ public class Modus extends Thread{
             SensorValue sv = iterator.next();
             float X = sv.getfX(),Y = sv.getfY(),Z = sv.getfZ();
             partialEnergy = X*X+Y*Y+Z*Z;
-            //modusSignalu[in] = Math.sqrt(partialEnergy);
+            timeAnalysisModus[in] = Math.sqrt(partialEnergy);
             modusSignalu[in] = Z;
             time[in] = sv.getTimeStamp();
             in++;
         }
-        ModusSignaluType modus = new ModusSignaluType(modusSignalu, time);
+        ModusSignaluType modus = new ModusSignaluType(modusSignalu, time, timeAnalysisModus);
 
         Message msg = serviceHandler.obtainMessage(ServiceDetekce.HandlerService.MODUS_FINISHED, modus);
         serviceHandler.sendMessage(msg);

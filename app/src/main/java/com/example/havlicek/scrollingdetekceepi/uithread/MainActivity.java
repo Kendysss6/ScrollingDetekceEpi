@@ -298,6 +298,12 @@ public class MainActivity extends Activity {
                     modus = intent.getParcelableExtra("Modus");
                 }
             }
+            if (intent.hasExtra("TimeAnalysis")){
+                if (!intent.getBooleanExtra("TimeAnalysis",false)){
+                    TextView t = (TextView) findViewById(R.id.vysledek_mereni);
+                    t.setText("False, non-movement");
+                }
+            }
             if(intent.hasExtra("FModus")){
                 if(!zachovat.isChecked()){
                     fModus = intent.getParcelableExtra("FModus");
