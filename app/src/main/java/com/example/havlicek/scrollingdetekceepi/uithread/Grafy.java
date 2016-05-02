@@ -127,7 +127,7 @@ public class Grafy extends Activity {
         // vynuluju DC slozku
         //values[0] = new Complex(0,0);
         for(int i = 0; i < X.length; i++){
-            X[i] = new DataPoint((i*fs)/N, values[i].abs());
+            X[i] = new DataPoint((i*fs)/N, values[i].abs()/values.length);
             //Log.d("Grafy",((double)(i*fs)/N)+" "+values[i].abs());
         }
 
@@ -149,11 +149,13 @@ public class Grafy extends Activity {
 
     }
     public void zarovnatGrafy(View v){
-        double i = X[X.length-1].getX();
+        double i = Math.ceil(X[X.length - 1].getX());
         ((GraphView)findViewById(R.id.graph_X)).getViewport().setMaxX(i);
         ((GraphView)findViewById(R.id.graph_X)).getViewport().setMinX(0);
+        i = Math.ceil(Y[Y.length-1].getX());
         ((GraphView)findViewById(R.id.graph_Y)).getViewport().setMaxX(i);
         ((GraphView)findViewById(R.id.graph_Y)).getViewport().setMinX(0);
+        i = Math.ceil(Z[Z.length-1].getX());
         ((GraphView)findViewById(R.id.graph_Z)).getViewport().setMaxX(i);
         ((GraphView)findViewById(R.id.graph_Z)).getViewport().setMinX(0);
          findViewById(R.id.myScroll).refreshDrawableState();
