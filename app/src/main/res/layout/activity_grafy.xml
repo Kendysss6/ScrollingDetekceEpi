@@ -28,17 +28,11 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <Button
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Vypnout scroling"
-                android:onClick="stopScroling" />
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Zapnout scroling"
-                android:onClick="zapnoutScroling"/>
+                android:text="New Text"
+                android:id="@+id/Osa_X" />
         </LinearLayout>
 
         <com.jjoe64.graphview.helper.GraphViewXML
@@ -54,17 +48,11 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" >
 
-            <Button
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Vypnout scroling"
-                android:onClick="stopScroling" />
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Zapnout scroling"
-                android:onClick="zapnoutScroling" />
+                android:text="New Text"
+                android:id="@+id/Osa_Y" />
         </LinearLayout>
 
         <com.jjoe64.graphview.helper.GraphViewXML
@@ -80,17 +68,11 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" >
 
-            <Button
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Vypnout scroling"
-                android:onClick="stopScroling" />
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Zapnout scroling"
-                android:onClick="zapnoutScroling" />
+                android:text="New Text"
+                android:id="@+id/Osa_Z" />
         </LinearLayout>
 
         <com.jjoe64.graphview.helper.GraphViewXML

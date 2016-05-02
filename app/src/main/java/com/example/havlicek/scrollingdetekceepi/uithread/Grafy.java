@@ -6,9 +6,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.havlicek.scrollingdetekceepi.CustomScrollView;
 import com.example.havlicek.scrollingdetekceepi.R;
 import com.example.havlicek.scrollingdetekceepi.datatypes.FFTType;
 import com.example.havlicek.scrollingdetekceepi.datatypes.ModusSignaluType;
@@ -19,6 +19,7 @@ import com.jjoe64.graphview.series.LineGraphSeries;
 import com.jjoe64.graphview.series.PointsGraphSeries;
 
 import org.apache.commons.math3.complex.Complex;
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Vector;
@@ -61,20 +62,21 @@ public class Grafy extends Activity {
         graphZ.removeAllSeries();
 
         graphX.addSeries(seriesX);
-        //graphX.getViewport().setXAxisBoundsManual(true);
+        graphX.getViewport().setXAxisBoundsManual(true);
         //graphX.getViewport().setScalable(true);
         //graphX.getViewport().setScrollable(true);
         //graphX.getViewport().setMinX(0);
         //graphX.getViewport().setMaxX(10);
         graphY.addSeries(seriesY);
-        //graphY.getViewport().setXAxisBoundsManual(true);
+        graphY.getViewport().setXAxisBoundsManual(true);
         //graphY.getViewport().setScalable(true);
         //graphY.getViewport().setScrollable(true);
         graphZ.addSeries(seriesZ);
-        //graphZ.getViewport().setXAxisBoundsManual(true);
+        graphZ.getViewport().setXAxisBoundsManual(true);
         //graphZ.getViewport().setScalable(true);
         //graphZ.getViewport().setScrollable(true);
-        //zarovnatGrafy(null);
+        zarovnatGrafy(null);
+        setPopiskyGrafu(i.getAction());
     }
 
     @Override
@@ -146,15 +148,6 @@ public class Grafy extends Activity {
         }
 
     }
-
-    public void stopScroling(View v){
-        //CustomScrollView view = (CustomScrollView) findViewById(R.id.myScroll);
-        //view.setEnableScrolling(false);
-    }
-    public void zapnoutScroling(View v){
-        //CustomScrollView view = (CustomScrollView) findViewById(R.id.myScroll);
-        //view.setEnableScrolling(true);
-    }
     public void zarovnatGrafy(View v){
         double i = X[X.length-1].getX();
         ((GraphView)findViewById(R.id.graph_X)).getViewport().setMaxX(i);
@@ -164,5 +157,24 @@ public class Grafy extends Activity {
         ((GraphView)findViewById(R.id.graph_Z)).getViewport().setMaxX(i);
         ((GraphView)findViewById(R.id.graph_Z)).getViewport().setMinX(0);
          findViewById(R.id.myScroll).refreshDrawableState();
+    }
+
+    private void setPopiskyGrafu(String action){
+        TextView t;
+        if (action.equals("raw") || action.equals("lin")){
+            t = (TextView) findViewById(R.id.Osa_X);
+            t.setText("Osa X");
+            t = (TextView) findViewById(R.id.Osa_Y);
+            t.setText("Osa Y");
+            t = (TextView) findViewById(R.id.Osa_Z);
+            t.setText("Osa Z");
+        }  else if (action.equals("fft")){
+            t = (TextView) findViewById(R.id.Osa_X);
+            t.setText("Jednostraná Fourierova transformace");
+            t = (TextView) findViewById(R.id.Osa_Y);
+            t.setText("Nefiltravaný signál");
+            t = (TextView) findViewById(R.id.Osa_Z);
+            t.setText("Signál filtrovaný vysokou propustí");
+        }
     }
 }

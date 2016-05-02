@@ -227,6 +227,7 @@ public class MainActivity extends Activity {
         RadioButton b = (RadioButton) findViewById(R.id.namerenaDat_radio);
         if(b.isChecked()) {
             Intent in = new Intent(this, Grafy.class);
+            in.setAction("raw");
             in.putExtra("sourceDir", sourceDir);
             in.putParcelableArrayListExtra("List", this.raw);
             startActivity(in);
@@ -234,6 +235,7 @@ public class MainActivity extends Activity {
         b = (RadioButton) findViewById(R.id.inter_radio);
         if(b.isChecked()) {
             Intent in = new Intent(this, Grafy.class);
+            in.setAction("lin");
             in.putExtra("sourceDir", sourceDir);
             in.putParcelableArrayListExtra("List", this.lin);
             startActivity(in);
@@ -241,6 +243,7 @@ public class MainActivity extends Activity {
         b = (RadioButton) findViewById(R.id.fft_radio);
         if(b.isChecked()) {
             Intent in = new Intent(this, Grafy.class);
+            in.setAction("fft");
             in.putExtra("sourceDir", sourceDir);
             in.putExtra("FFT", this.fft);
             in.putExtra("Modus", this.modus);
