@@ -24,7 +24,7 @@ import org.w3c.dom.Text;
 import java.util.ArrayList;
 import java.util.Vector;
 
-public class Grafy extends Activity {
+public class GrafActivity extends Activity {
     DataPoint [] X = null;
     DataPoint [] Y = null;
     DataPoint [] Z = null;
@@ -42,7 +42,7 @@ public class Grafy extends Activity {
         } else {
             ArrayList<SensorValue> raw = i.getParcelableArrayListExtra("List");
             if(raw == null){
-                Log.d("Grafy","null");
+                Log.d("GrafActivity","null");
                 return;
             }
             convertArray(raw);
@@ -128,14 +128,14 @@ public class Grafy extends Activity {
         //values[0] = new Complex(0,0);
         for(int i = 0; i < X.length; i++){
             X[i] = new DataPoint((i*fs)/N, values[i].abs()/values.length);
-            //Log.d("Grafy",((double)(i*fs)/N)+" "+values[i].abs());
+            //Log.d("GrafActivity",((double)(i*fs)/N)+" "+values[i].abs());
         }
 
         // modus
         long it = time[0];
         for(int i = 0; i < time.length; i++){
             Y[i] = new DataPoint((time[i]-it)*1e-9, modVal[i]);
-            //Log.d("Grafy",((time[i]-it)*1e-9)+" "+modVal[i]);
+            //Log.d("GrafActivity",((time[i]-it)*1e-9)+" "+modVal[i]);
 
         }
 
@@ -143,7 +143,7 @@ public class Grafy extends Activity {
         long it2 = time2[0];
         for(int i = 0; i < time.length; i++){
             Z[i] = new DataPoint((time2[i]-it2)*1e-9, modVal2[i]);
-            //Log.d("Grafy",((time[i]-it)*1e-9)+" "+modVal[i]);
+            //Log.d("GrafActivity",((time[i]-it)*1e-9)+" "+modVal[i]);
 
         }
 

@@ -3,19 +3,11 @@ package com.example.havlicek.scrollingdetekceepi.uithread;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
-import android.hardware.Sensor;
-import android.hardware.SensorManager;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.os.Messenger;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -210,13 +202,13 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Pokud budu mít všechny data tj. raw data, lin data, modus data a fft data pak spusti aktivitu Grafy.
+     * Pokud budu mít všechny data tj. raw data, lin data, modus data a fft data pak spusti aktivitu GrafActivity.
      * Jinak hodi upozorneni "Data zpracovávají, stiskněte později". pmoci Toast
      * @param v
      */
     public void vykresli(View v){
         //FFTType vh = new FFTType();
-      //  Intent i = new Intent(this, Grafy.class);
+      //  Intent i = new Intent(this, GrafActivity.class);
        // i.putParcelableArrayListExtra("RawList",this.raw);
         /*
         i.putExtra("fft", vh.fft);
@@ -226,7 +218,7 @@ public class MainActivity extends Activity {
 
         RadioButton b = (RadioButton) findViewById(R.id.namerenaDat_radio);
         if(b.isChecked()) {
-            Intent in = new Intent(this, Grafy.class);
+            Intent in = new Intent(this, GrafActivity.class);
             in.setAction("raw");
             in.putExtra("sourceDir", sourceDir);
             in.putParcelableArrayListExtra("List", this.raw);
@@ -234,7 +226,7 @@ public class MainActivity extends Activity {
         }
         b = (RadioButton) findViewById(R.id.inter_radio);
         if(b.isChecked()) {
-            Intent in = new Intent(this, Grafy.class);
+            Intent in = new Intent(this, GrafActivity.class);
             in.setAction("lin");
             in.putExtra("sourceDir", sourceDir);
             in.putParcelableArrayListExtra("List", this.lin);
@@ -242,7 +234,7 @@ public class MainActivity extends Activity {
         }
         b = (RadioButton) findViewById(R.id.fft_radio);
         if(b.isChecked()) {
-            Intent in = new Intent(this, Grafy.class);
+            Intent in = new Intent(this, GrafActivity.class);
             in.setAction("fft");
             in.putExtra("sourceDir", sourceDir);
             in.putExtra("FFT", this.fft);
@@ -253,7 +245,7 @@ public class MainActivity extends Activity {
         /*
         b = (RadioButton) findViewById(R.id.fft_radio);
         if(b.isChecked()) {
-            Intent in = new Intent(this, Grafy.class);
+            Intent in = new Intent(this, GrafActivity.class);
             in.putExtra("sourceDir", sourceDir);
             in.putParcelableArrayListExtra("List", this.fft);
             startActivity(in);
