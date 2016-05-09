@@ -31,10 +31,9 @@ public class ThreadAsynchMereni extends HandlerThread implements SensorEventList
 
     private List<SensorValue> values;
 
-    private final int pocetPrvkuNavic = 50;
-    private float offsetX;
-    private float offsetY;
-    private float offsetZ;
+    private float offsetX = 0;
+    private float offsetY = 0;
+    private float offsetZ = 0;
 
     private DecimalFormat decimalFormat = new DecimalFormat("0.0000000000", new DecimalFormatSymbols(Locale.ENGLISH));
 
@@ -44,7 +43,7 @@ public class ThreadAsynchMereni extends HandlerThread implements SensorEventList
         start();
         this.uiHandler = uiHandler;
         this.mWorkerHandler = new HandlerAsynchMereni(getLooper());
-        this.values = new ArrayList<SensorValue>(ServiceDetekce.ODHADOVANY_POCET_PRVKU + pocetPrvkuNavic);
+        this.values = new ArrayList<SensorValue>(ServiceDetekce.ODHADOVANY_POCET_PRVKU);
 
         this.offsetX = offsetX;
         this.offsetY = offsetY;
@@ -90,7 +89,7 @@ public class ThreadAsynchMereni extends HandlerThread implements SensorEventList
                     Message m = Message.obtain();
                     m.what = ServiceDetekce.HandlerService.MEASURING_FINISHED;
                     m.obj = ThreadAsynchMereni.this.values;
-                    values = new ArrayList<SensorValue>(ServiceDetekce.ODHADOVANY_POCET_PRVKU + pocetPrvkuNavic);
+                    values = new ArrayList<SensorValue>(ServiceDetekce.ODHADOVANY_POCET_PRVKU);
                     uiHandler.sendMessage(m);
                     break;
                 case KALIBRACE_SETTINGS:
@@ -99,10 +98,10 @@ public class ThreadAsynchMereni extends HandlerThread implements SensorEventList
                             offsetX = 0;
                             offsetY = 0;
                             offsetZ = 0;
-                            values = new ArrayList<SensorValue>(ServiceDetekce.ODHADOVANY_POCET_PRVKU + pocetPrvkuNavic);
+                            values = new ArrayList<SensorValue>(ServiceDetekce.ODHADOVANY_POCET_PRVKU);
                             break;
                         case NEKALIBRUJEME:
-                            values = new ArrayList<SensorValue>(ServiceDetekce.ODHADOVANY_POCET_PRVKU + pocetPrvkuNavic);
+                            values = new ArrayList<SensorValue>(ServiceDetekce.ODHADOVANY_POCET_PRVKU);
                             break;
                         default:
                             break;

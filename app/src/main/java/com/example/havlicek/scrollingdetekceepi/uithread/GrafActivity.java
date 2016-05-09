@@ -141,15 +141,15 @@ public class GrafActivity extends Activity {
 
         // modus filtered
         long it2 = time2[0];
-        for(int i = 0; i < time.length; i++){
+       for(int i = 0; i < time2.length; i++){
             Z[i] = new DataPoint((time2[i]-it2)*1e-9, modVal2[i]);
-            //Log.d("GrafActivity",((time[i]-it)*1e-9)+" "+modVal[i]);
-
+            //Log.d("GrafActivity",i+" "+((time2[i]-it2)*1e-9)+" "+modVal2[i]);
         }
 
     }
     public void zarovnatGrafy(View v){
-        double i = Math.ceil(X[X.length - 1].getX());
+        double i;
+        i = Math.ceil(X[X.length-1].getX());
         ((GraphView)findViewById(R.id.graph_X)).getViewport().setMaxX(i);
         ((GraphView)findViewById(R.id.graph_X)).getViewport().setMinX(0);
         i = Math.ceil(Y[Y.length-1].getX());
@@ -176,7 +176,7 @@ public class GrafActivity extends Activity {
             t = (TextView) findViewById(R.id.Osa_Y);
             t.setText("Nefiltrovaný signál");
             t = (TextView) findViewById(R.id.Osa_Z);
-            t.setText("Signál filtrovaný vysokou propustí");
+            t.setText("Signál filtrovaný vysokofrekvenční propustí");
         }
     }
 }

@@ -118,7 +118,7 @@ public class KalibraceActivity extends AppCompatActivity {
         editor.putFloat("offsetX", (float) mX.getResult());
         editor.putFloat("offsetY", (float) mY.getResult());
         editor.putFloat("offsetZ", (float) mZ.getResult());
-        editor.putFloat("meanTimeNanosec", (float) mTime.getResult()); // vzorkovani
+        editor.putLong("meanTimeNanosec", (long) mTime.getResult()); // vzorkovani
         editor.commit(); // ano chci aby to bylo okamžitě, protože to hned budu načítat
         Log.d("kalibrace","hodnoty ulozeny do preferences");
     }
@@ -161,16 +161,19 @@ public class KalibraceActivity extends AppCompatActivity {
     };
 
     private void spoctiEstMeanAndVar(List<SensorValue> values){
-        double sumX = 0, sumY = 0, sumZ = 0;
+        double sumX = 0, sumY = 0, sumZ = 0, time = 0;
         // stredni hodnota
-        for (SensorValue value: values){
-            sumX += value.getfX();
-            sumY += value.getfY();
-            sumZ += value.getfZ();
+        for (int i = 0; i < values.size(); i++){
+            sumX += values.get(i).getfX();
+            sumY += values.get(i).getfY();
+            sumZ += values.get(i).getfZ();
+            if(i == 0)continue;
+            time += values.get(i).getTimeStamp() - values.get(i-1).getTimeStamp();
         }
         this.estMeanX = sumX / values.size();
         this.estMeanY = sumY / values.size();
         this.estMeanZ = sumZ / values.size();
+        time = time / (values.size() - 1);
 
         // variance
         sumX = 0; sumY = 0; sumZ = 0;
@@ -187,6 +190,7 @@ public class KalibraceActivity extends AppCompatActivity {
         Log.d("Kalibrace", "X: " + estMeanX + " " + odchylkaX);
         Log.d("Kalibrace", "Y: " + estMeanY + " " + odchylkaY);
         Log.d("Kalibrace", "Z: " + estMeanZ + " " + odchylkaZ);
+        Log.d("Kalibrace", "time: "+time);
     }
 
 

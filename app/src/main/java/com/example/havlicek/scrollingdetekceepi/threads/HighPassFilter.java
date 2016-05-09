@@ -23,12 +23,14 @@ public class HighPassFilter extends Thread{
     private ModusSignaluType pomvalues;
     private double [] beforeValues;
     private RealMatrix matrix;
+    private final long meanTimeNanosec;
 
 
-    public HighPassFilter(ModusSignaluType values, Handler serviceHandler, RealMatrix matrix){
+    public HighPassFilter(ModusSignaluType values, Handler serviceHandler, RealMatrix matrix, long meanTimeNanosec){
         this.serviceHandler = serviceHandler;
         this.pomvalues = values;
         this.matrix = matrix;
+        this.meanTimeNanosec = meanTimeNanosec;
     }
 
     @Override
@@ -61,8 +63,22 @@ public class HighPassFilter extends Thread{
         double [] pomVal = new double[N];
         double [] result = new double[1024];
 
+        long [] time = new long[1024];
+        long [] pomTime = sensorValues.time;
+
+        int j = 0;
+        for (; j < pomTime.length; j++){
+            time[j] = pomTime[j];
+        }
+        if (j == 0){time[j] = 0; j++;};
+        for (; j < 1024; j++){
+            time[j] = time[j-1] + meanTimeNanosec;
+           // Log.d("HighPass","j "+time[j]);
+        }
+
+
         int i = 0;
-        for (int j = 0; j < val.length/N; j++){
+        for (j = 0; j < val.length/N; j++){
             for(; i < N*(j+1); i++){
                 pomVal[i - j*N] = val[i];
             }
@@ -84,14 +100,14 @@ public class HighPassFilter extends Thread{
             result[result.length + m - rslt.length] = rslt[m];
         }
 
-        for (int m = 0; m < rslt.length; m++){
+        /*for (int m = 0; m < rslt.length; m++){
             Log.d("vysledky","filtrovany"+rslt[m] + " puvodni "+pomVal[m]);
-        }
+        }*/
 
 
         //Log.d("pad", "" + fVal);
         // algoritmus
-        ModusSignaluType vysledek = new ModusSignaluType(result,sensorValues.time, sensorValues.modus); // s casem nic nedělam ten mužu nechat stejny
+        ModusSignaluType vysledek = new ModusSignaluType(result, time, sensorValues.modus); // s casem nic nedělam ten mužu nechat stejny
 
         Message msg = serviceHandler.obtainMessage(ServiceDetekce.HandlerService.FILTER_FINISHED, vysledek);
         serviceHandler.sendMessage(msg);

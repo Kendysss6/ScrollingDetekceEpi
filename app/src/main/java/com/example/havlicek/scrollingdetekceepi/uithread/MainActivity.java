@@ -105,7 +105,7 @@ public class MainActivity extends Activity {
             b = (TextView) findViewById(R.id.offsetZ);
             b.setText(Float.toString(p.getFloat("offsetZ", 0f)));
             b = (TextView) findViewById(R.id.sampling_period);
-            b.setText(Float.toString(p.getFloat("meanTimeNanosec", 0f)));
+            b.setText(Long.toString(p.getLong("meanTimeNanosec", 0)));
             //b.setText(""+p.getFloat("meanTimeNanosec", 0f));
         }
 

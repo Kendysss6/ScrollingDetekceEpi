@@ -27,7 +27,6 @@ import com.example.havlicek.scrollingdetekceepi.threads.LinInterpolace;
 import com.example.havlicek.scrollingdetekceepi.threads.Modus;
 import com.example.havlicek.scrollingdetekceepi.threads.ZapisDoSouboru;
 
-import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 
@@ -50,7 +49,7 @@ public class ServiceDetekce extends Service {
      */
     private ThreadAsynchMereni threadAsynchMereni;
     /**
-     * Timer, ktery každou periodu {@link #TIMER_PERIOD_MILISEC} zavolá měření {@link ServiceDetekce#getTask(boolean)} pro vyhodnocení naměřených dat.
+     * Timer, ktery každou periodu {@link #TIMER_PERIOD_MIKROSEC} zavolá měření {@link ServiceDetekce#getTask(boolean)} pro vyhodnocení naměřených dat.
      */
     private Timer timer = null;
     private SensorManager mSensorManager;
@@ -65,23 +64,25 @@ public class ServiceDetekce extends Service {
 
     private String sourceDir = null;
 
-    public static final int MY_SAMPLING_PERIOD_MICROSEC = 500000; // 2 vzorky za sekundu
+    public static final int MY_SAMPLING_PERIOD_MICROSEC = 10000; // 2 vzorky za sekundu
     /**
      * Odhadovany počet prvku se kterymi budeme počítat fourierovu transformaci a klasifikaci
      */
-    public static final int ODHADOVANY_POCET_PRVKU = 512;
+    public static final int ODHADOVANY_POCET_PRVKU = 1024;
     public RealMatrix matrix = null;
     /**
      * Perioda, za kterou časovač {@link ServiceDetekce#timer} spouští úkol {@link ServiceDetekce#getTask(boolean)}
      */
-    //public final int TIMER_PERIOD_MILISEC = MY_SAMPLING_PERIOD_MICROSEC * ODHADOVANY_POCET_PRVKU; // perioda
-    public static final int TIMER_PERIOD_MILISEC = 10000; // perioda v milisekundach, kazdych 10 sekund
-    public static final int TIMER_PERIOD_MILISEC_KALIBRACE = 2 * TIMER_PERIOD_MILISEC;
+    //public final int TIMER_PERIOD_MIKROSEC = MY_SAMPLING_PERIOD_MICROSEC * ODHADOVANY_POCET_PRVKU; // perioda
+    public static final int TIMER_PERIOD_MIKROSEC = 10000; // perioda v mikrosekundach, kazdych 10 sekund
+    public static final int TIMER_PERIOD_MILISEC_KALIBRACE = 2 * TIMER_PERIOD_MIKROSEC;
 
     /**
      * Id notifikace foreground service, nastavuje se v {@link ServiceDetekce#timer}
      */
     public static final int notificationID = 156;
+
+    private long estimatedSamplingPeriod = TIMER_PERIOD_MIKROSEC * 1000;
     public ServiceDetekce() {
         super();
     }
@@ -94,8 +95,10 @@ public class ServiceDetekce extends Service {
         Log.d("ServiceDetekce","onCreate()");
         mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        //mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         // Load offsets
         SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(this);
+        estimatedSamplingPeriod = p.getLong("meanTimeNanosec", TIMER_PERIOD_MIKROSEC * 1000);
 
         // Service Thread
         HandlerThread thread = new HandlerThread("Service Detekce", Process.THREAD_PRIORITY_FOREGROUND);
@@ -147,7 +150,7 @@ public class ServiceDetekce extends Service {
      * <p>Nastavuje se:</p>
      * <ul>
      *     <li>Jestli bude: Měření+klasifikace/Měření/Kalibrace</li>
-     *     <li>Perioda měření (default {@link #TIMER_PERIOD_MILISEC})</li>
+     *     <li>Perioda měření (default {@link #TIMER_PERIOD_MIKROSEC})</li>
      *     <li>Type of timerTask to execute</li>
      * </ul>
      * <p>Udělá se</p>
@@ -173,9 +176,9 @@ public class ServiceDetekce extends Service {
                 message = handlerAsynchMereni.obtainMessage(ThreadAsynchMereni.KALIBRACE_SETTINGS, ThreadAsynchMereni.HandlerAsynchMereni.KALIBRUJEME, ThreadAsynchMereni.HandlerAsynchMereni.KALIBRUJEME);
             } else {
                 timer = new Timer();
-                timer.scheduleAtFixedRate(getTask(kalibrace), TIMER_PERIOD_MILISEC, TIMER_PERIOD_MILISEC);
+                timer.scheduleAtFixedRate(getTask(kalibrace), TIMER_PERIOD_MIKROSEC, TIMER_PERIOD_MIKROSEC);
                 message = handlerAsynchMereni.obtainMessage(ThreadAsynchMereni.KALIBRACE_SETTINGS, ThreadAsynchMereni.HandlerAsynchMereni.NEKALIBRUJEME, ThreadAsynchMereni.HandlerAsynchMereni.NEKALIBRUJEME);
-                //Log.d("perioda",""+ TIMER_PERIOD_MILISEC);
+                //Log.d("perioda",""+ TIMER_PERIOD_MIKROSEC);
             }
             // nastaveni offsetu a mereni
             handlerAsynchMereni.sendMessage(message);
@@ -210,7 +213,7 @@ public class ServiceDetekce extends Service {
     }
 
     /**
-     * Úkol, který spouští časovač {@link ServiceDetekce#timer} každých {@link ServiceDetekce#TIMER_PERIOD_MILISEC} milisekund.
+     * Úkol, který spouští časovač {@link ServiceDetekce#timer} každých {@link ServiceDetekce#TIMER_PERIOD_MIKROSEC} milisekund.
      * @param isKalibrace jestli je zrovna kalibrujeme senzory
      */
     private TimerTask getTask(boolean isKalibrace){
@@ -322,7 +325,7 @@ public class ServiceDetekce extends Service {
                         i.putExtra("TimeAnalysis",true);
                         LocalBroadcastManager.getInstance(ServiceDetekce.this).sendBroadcast(i);
                         // tady ziskam z message true/false jestli signal ma dostatecnou energii a zda mam pokracovat dal
-                        HighPassFilter filter = new HighPassFilter(modus,this,matrix);
+                        HighPassFilter filter = new HighPassFilter(modus,this,matrix, estimatedSamplingPeriod);
                         filter.start();
                     }
                     break;
