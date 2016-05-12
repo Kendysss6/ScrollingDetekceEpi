@@ -18,7 +18,8 @@ import java.util.Locale;
 
 /**
  * Created by Ondřej on 16. 2. 2016.
- *
+ * Třída pro asynchroní záznam hodnot. Do této třídy přichází periodicky požadavek o záznam hodnot.
+ * Ten se předá a aktuální zaznam se vyprázdní.
  * Here i will be managing offset (substracting)
  */
 public class ThreadAsynchMereni extends HandlerThread implements SensorEventListener {

@@ -12,6 +12,7 @@ import java.util.ListIterator;
 
 /**
  * Created by Havlicek on 23.4.2016.
+ * Třída pro lineární interpolaci dat.
  */
 public class LinInterpolace extends Thread{
     private Handler serviceHandler;

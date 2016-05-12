@@ -35,6 +35,11 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/**
+ * Hlavní služba aplikace. Běží na samostatném vlákně Tato služba pracuje jako foreground service a vykonává všechny výpočty v měření,
+ * které jsou potřeba pro běh aplikace. Všechny tyto výpočty a měření probíhají na jiných vlánek, aby
+ * Main vlákno nebylo přetíženo.
+ */
 public class ServiceDetekce extends Service {
     private Looper serviceLooper;
     private Handler handlerService;

@@ -22,7 +22,7 @@ import java.util.Locale;
 
 /**
  * Created by Havlicek on 23.4.2016.
- * Třída pro zápis do souboru
+ * Třída pro zápis do souboru všech možných druhu dat
  */
 public class ZapisDoSouboru extends Thread{
     Handler serviceHandler;

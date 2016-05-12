@@ -15,6 +15,7 @@ import java.util.ListIterator;
 
 /**
  * Created by Havlicek on 23.4.2016.
+ * Třída pro klasifikaci dat.
  */
 public class Klasifikace extends Thread{
     private Handler serviceHandler;

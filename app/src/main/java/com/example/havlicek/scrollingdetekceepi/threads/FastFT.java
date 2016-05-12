@@ -19,6 +19,7 @@ import java.util.ListIterator;
 
 /**
  * Created by Havlicek on 23.4.2016.
+ * Třída pro výpočet Rychlé Fourierovi transformace.
  */
 public class FastFT extends Thread{
     private Handler serviceHandler;

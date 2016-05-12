@@ -16,6 +16,7 @@ import org.json.JSONException;
 
 /**
  * Created by Ondřej on 28. 4. 2016.
+ * Třída pro načtení matice, která se používá pro filtraci signálu.
  */
 public class MatrixDInv extends AsyncTask<Void, Integer, RealMatrix> {
     ServiceDetekce s;

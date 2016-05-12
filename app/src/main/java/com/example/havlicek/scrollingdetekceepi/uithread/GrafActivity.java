@@ -24,6 +24,9 @@ import org.w3c.dom.Text;
 import java.util.ArrayList;
 import java.util.Vector;
 
+/**
+ * Třída pro vykreslování naměřených dat.
+ */
 public class GrafActivity extends Activity {
     DataPoint [] X = null;
     DataPoint [] Y = null;

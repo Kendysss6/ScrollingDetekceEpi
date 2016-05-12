@@ -28,6 +28,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+/**
+ * Hlavní aktivita aplikace. Z této aplikac se spouští všechny procesy a úkoly v této aplikace.
+ */
 public class MainActivity extends Activity {
     private boolean detectionOff = true;
     private String idMereni = null;

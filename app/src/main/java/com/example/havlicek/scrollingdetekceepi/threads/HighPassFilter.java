@@ -17,6 +17,7 @@ import java.util.ListIterator;
 
 /**
  * Created by Ondřej on 28. 4. 2016.
+ * Třída pro filtravání signálu. High-pass filtr.
  */
 public class HighPassFilter extends Thread{
     private Handler serviceHandler;
