@@ -34,19 +34,21 @@ public class ZapisDoSouboru extends Thread{
     FFTType fft;
     ModusSignaluType mod;
     private int typMereniInt;
+    private boolean zapisIDData = false;
 
     private final int RAW = 1;
     private final int LIN = 2;
     private final int MOD = 3;
     private final int FFT = 4;
 
-    public ZapisDoSouboru(ArrayList<SensorValue> values, String idMereni, String typMereni, String sourceDir, Handler serviceHandler){
+    public ZapisDoSouboru(ArrayList<SensorValue> values, String idMereni, String typMereni, String sourceDir, Handler serviceHandler, boolean zapisIDData){
         this.idMereni = idMereni;
         this.typMereni = typMereni;
         this.sourceDir = sourceDir;
         this.serviceHandler = serviceHandler;
         this.values = values;
         this.setName("ZapisDoSouboru");
+        this.zapisIDData = zapisIDData;
         if (typMereni.equals("raw")){
             typMereniInt = RAW;
         } else {
@@ -54,7 +56,7 @@ public class ZapisDoSouboru extends Thread{
         }
     }
 
-    public ZapisDoSouboru(FFTType type, String idMereni, String typMereni, String sourceDir, Handler serviceHandler){
+    public ZapisDoSouboru(FFTType type, String idMereni, String typMereni, String sourceDir, Handler serviceHandler, boolean zapisIDData){
         this.idMereni = idMereni;
         this.typMereni = typMereni;
         this.sourceDir = sourceDir;
@@ -62,9 +64,10 @@ public class ZapisDoSouboru extends Thread{
         this.fft = type;
         this.setName("ZapisDoSouboru");
         typMereniInt = FFT;
+        this.zapisIDData = zapisIDData;
     }
 
-    public ZapisDoSouboru(ModusSignaluType type, String idMereni, String typMereni, String sourceDir, Handler serviceHandler){
+    public ZapisDoSouboru(ModusSignaluType type, String idMereni, String typMereni, String sourceDir, Handler serviceHandler, boolean zapisIDData){
         this.idMereni = idMereni;
         this.typMereni = typMereni;
         this.sourceDir = sourceDir;
@@ -72,6 +75,7 @@ public class ZapisDoSouboru extends Thread{
         this.mod = type;
         this.setName("ZapisDoSouboru");
         typMereniInt = MOD;
+        this.zapisIDData = zapisIDData;
     }
 
     public static File getAlbumStorageDir(String dirInDownloads, String fileName) {
@@ -125,7 +129,12 @@ public class ZapisDoSouboru extends Thread{
                     writer.write("data = ");
                 }*/
             if(!isInterrupted()){
-                writer.write("data = ");
+                if(cisloMereni > 0 && zapisIDData){
+                    writer.write("data{"+cisloMereni+"} = ");
+                } else {
+                    writer.write("data = ");
+                }
+
                 //String jsonZapis = list.toString(4).replaceAll("],", "];");
                 //Log.d("json", jsonZapis);
                 //Log.d("jsonFloat",listFloats.toString(4).replaceAll("],", "];"));
@@ -168,7 +177,11 @@ public class ZapisDoSouboru extends Thread{
                     writer.write("data = ");
                 }*/
             if(!isInterrupted()){
-                writer.write("data = ");
+                if(cisloMereni > 0 && zapisIDData){
+                    writer.write("data{"+cisloMereni+"} = ");
+                } else {
+                    writer.write("data = ");
+                }
                 //String jsonZapis = list.toString(4).replaceAll("],", "];");
                 //Log.d("json", jsonZapis);
                 //Log.d("jsonFloat",listFloats.toString(4).replaceAll("],", "];"));
@@ -213,7 +226,11 @@ public class ZapisDoSouboru extends Thread{
                     writer.write("data = ");
                 }*/
             if(!isInterrupted()){
-                writer.write("data = ");
+                if(cisloMereni > 0 && zapisIDData){
+                    writer.write("data{"+cisloMereni+"} = ");
+                } else {
+                    writer.write("data = ");
+                }
                 //String jsonZapis = list.toString(4).replaceAll("],", "];");
                 //Log.d("json", jsonZapis);
                 //Log.d("jsonFloat",listFloats.toString(4).replaceAll("],", "];"));

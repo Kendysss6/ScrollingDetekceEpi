@@ -252,7 +252,7 @@ public class ServiceDetekce extends Service {
         public static final int FFT_FINISHED = 4;
         public static final int KLASIFICATION_FINISHED = 5;
 
-        private int cisloMereni = 0;
+        private int cisloMereni = 1;
 
         public static final double GRAVITY = 9.8;
 
@@ -277,8 +277,8 @@ public class ServiceDetekce extends Service {
             switch (msg.what){
                 case MEASURING_FINISHED:
                     l = (ArrayList) msg.obj;
-                    zapis = new ZapisDoSouboru(l,idMereni,"raw",sourceDir,this);
-                    zapis.setIndex(++cisloMereni);
+                    zapis = new ZapisDoSouboru(l,idMereni,"raw",sourceDir,this,false);
+                    zapis.setIndex(cisloMereni++);
                     zapis.start(); // zapis nezpracovaných hodnot z akcelerometru do souboru
                     if (kalibrace){ // jediny rozdil, pokud dělam kalibraci, je ,že pouze měřim hodnoty a pošlu je pres Intent zpet
                         i = new Intent("Kalibrace");
@@ -296,7 +296,7 @@ public class ServiceDetekce extends Service {
                     break;
                 case LIN_INTER_FINISHED:
                     l = (ArrayList) msg.obj;
-                    zapis = new ZapisDoSouboru(l,idMereni,"lin",sourceDir,this);
+                    zapis = new ZapisDoSouboru(l,idMereni,"lin",sourceDir,this,false);
                     zapis.start();
 
                     i = new Intent("DetekceZachvatu");
@@ -308,7 +308,7 @@ public class ServiceDetekce extends Service {
                     break;
                 case MODUS_FINISHED:
                     modus = (ModusSignaluType) msg.obj;
-                    zapis = new ZapisDoSouboru(modus,idMereni,"mod",sourceDir,this);
+                    zapis = new ZapisDoSouboru(modus,idMereni,"mod",sourceDir,this,false);
                     zapis.start();
 
                     double [] timeAnalysisModus = modus.modus;
@@ -331,7 +331,8 @@ public class ServiceDetekce extends Service {
                     break;
                 case FILTER_FINISHED:
                     modus = (ModusSignaluType) msg.obj;
-                    zapis = new ZapisDoSouboru(modus,idMereni,"fmod",sourceDir,this);
+                    zapis = new ZapisDoSouboru(modus,idMereni,"fmod",sourceDir,this,true);
+                    zapis.setIndex(cisloMereni);
                     zapis.start();
                     i = new Intent("DetekceZachvatu");
                     i.putExtra("FModus", modus);
@@ -341,7 +342,8 @@ public class ServiceDetekce extends Service {
                     break;
                 case FFT_FINISHED:
                     FFTType t = (FFTType) msg.obj;
-                    zapis = new ZapisDoSouboru(t,idMereni,"fft",sourceDir,this);
+                    zapis = new ZapisDoSouboru(t,idMereni,"fft",sourceDir,this, true);
+                    zapis.setIndex(cisloMereni);
                     zapis.start();
                     Klasifikace k = new Klasifikace(t,this);
                     k.start();

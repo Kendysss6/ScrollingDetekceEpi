@@ -111,7 +111,7 @@ public class MainActivity extends Activity {
 
 
         // register localBroadCastReciever to respond changes in UI from service
-        TextView textView = (TextView) findViewById(R.id.pomText);
+        //TextView textView = (TextView) findViewById(R.id.pomText);
         Log.d("Path", getFilesDir().getAbsolutePath());
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("DetekceZachvatu"));
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("Destroying Service"));
